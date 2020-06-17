@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".activity.MainActivity">
+    <TextureView
+        android:id="@+id/preview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+
+    <LinearLayout
+        android:layout_width="200dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:visibility="visible"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent">
+        <Button
+            android:id="@+id/btn_init_gaze"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="init gaze" />
+        <Button
+            android:id="@+id/btn_release_gaze"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="release gaze" />
+
+        <Button
+            android:id="@+id/btn_start_tracking"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="start tracking" />
+        <Button
+            android:id="@+id/btn_stop_tracking"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="stop tracking" />
+
+        <Button
+            android:id="@+id/btn_start_calibration"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="start calibration" />
+        <Button
+            android:id="@+id/btn_stop_calibration"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="stop calibration" />
+    </LinearLayout>
+
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/sw_use_gaze_filter"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@android:color/holo_blue_bright"
+        android:text="use gaze filter"/>
+    <LinearLayout
+        app:layout_constraintTop_toBottomOf="@id/sw_use_gaze_filter"
+        app:layout_constraintLeft_toLeftOf="parent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+        <androidx.appcompat.widget.AppCompatTextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/holo_blue_bright"
+            android:text="calibration type"/>
+        <RadioGroup
+            android:id="@+id/rg_calibration"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <androidx.appcompat.widget.AppCompatRadioButton
+                android:id="@+id/rb_calibration_one"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@android:color/holo_blue_bright"
+                android:text="1-point"/>
+            <androidx.appcompat.widget.AppCompatRadioButton
+                android:id="@+id/rb_calibration_five"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@android:color/holo_blue_bright"
+                android:text="5-point"/>
+        </RadioGroup>
+    </LinearLayout>
+
+    <!-- 시선 좌표 -->
+    <visual.camp.sample.view.PointView
+        android:id="@+id/view_point"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+    <!-- 캘리브레이션 뷰 -->
+    <visual.camp.sample.view.CalibrationViewer
+        android:id="@+id/view_calibration"
+        android:visibility="invisible"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+
+    <include layout="@layout/layout_progress"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
