@@ -20,6 +20,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.AppCompatTextView;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.content.ContextCompat;
 
@@ -37,6 +38,7 @@ import camp.visual.gazetracker.state.EyeMovementState;
 import camp.visual.gazetracker.state.TrackingState;
 import camp.visual.gazetracker.util.ViewLayoutChecker;
 import visual.camp.sample.app.R;
+import visual.camp.sample.app.calibration.CalibrationDataStorage;
 import visual.camp.sample.view.CalibrationViewer;
 import visual.camp.sample.view.PointView;
 
@@ -182,7 +184,7 @@ public class MainActivity extends AppCompatActivity {
     private PointView viewPoint;
     private Button btnInitGaze, btnReleaseGaze;
     private Button btnStartTracking, btnStopTracking;
-    private Button btnStartCalibration, btnStopCalibration;
+    private Button btnStartCalibration, btnStopCalibration, btnSetCalibration;
     private CalibrationViewer viewCalibration;
 
     // 시선 좌표 필터 관련
@@ -191,7 +193,12 @@ public class MainActivity extends AppCompatActivity {
     // 캘리브레이션 방식 관련
     private RadioGroup rgCalibration;
     private int calibrationType = CalibrationModeType.DEFAULT;
+
+    private AppCompatTextView txtGazeVersion;
     private void initView() {
+        txtGazeVersion = findViewById(R.id.txt_gaze_version);
+        txtGazeVersion.setText("version: " + GazeTracker.getVersionName());
+
         layoutProgress = findViewById(R.id.layout_progress);
         layoutProgress.setOnClickListener(null);
 
@@ -212,6 +219,9 @@ public class MainActivity extends AppCompatActivity {
         btnStopCalibration = findViewById(R.id.btn_stop_calibration);
         btnStartCalibration.setOnClickListener(onClickListener);
         btnStopCalibration.setOnClickListener(onClickListener);
+
+        btnSetCalibration = findViewById(R.id.btn_set_calibration);
+        btnSetCalibration.setOnClickListener(onClickListener);
 
         viewPoint = findViewById(R.id.view_point);
         viewCalibration = findViewById(R.id.view_calibration);
@@ -328,6 +338,8 @@ public class MainActivity extends AppCompatActivity {
                 startCalibration();
             } else if (v == btnStopCalibration) {
                 stopCalibration();
+            } else if (v == btnSetCalibration) {
+                setCalibration();
             }
         }
     };
@@ -393,6 +405,7 @@ public class MainActivity extends AppCompatActivity {
                 btnStopTracking.setEnabled(isGazeNonNull() && isTracking());
                 btnStartCalibration.setEnabled(isGazeNonNull() && isTracking());
                 btnStopCalibration.setEnabled(isGazeNonNull() && isTracking());
+                btnSetCalibration.setEnabled(isGazeNonNull());
                 if (!isTracking()) {
                     hideCalibrationView();
                 }
@@ -489,7 +502,9 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @Override
-        public void onCalibrationFinished() {
+        public void onCalibrationFinished(double[] calibrationData) {
+            // 캘리브레이션이 완료되면 캘리브레이션 데이터를 SharedPreference에 저장함
+            CalibrationDataStorage.saveCalibrationData(getApplicationContext(), calibrationData);
             hideCalibrationView();
         }
     };
@@ -589,6 +604,26 @@ public class MainActivity extends AppCompatActivity {
             gazeTracker.stopCalibration();
         }
         hideCalibrationView();
+        setViewAtGazeTrackerState();
+    }
+
+    private void setCalibration() {
+        if (isGazeNonNull()) {
+            double[] calibrationData = CalibrationDataStorage.loadCalibrationData(getApplicationContext());
+            if (calibrationData != null) {
+                // 저장한 데이터가 있을때
+                if (!gazeTracker.setCalibrationData(calibrationData)) {
+                    // 캘리브레이션 도중 데이터를 설정하면 false를 리턴하며 데이터를 설정하지 않음
+                    showToast("calibrating", false);
+                } else {
+                    // 캘리브레이션 데이터 설정 성공
+                    showToast("setCalibrationData success", false);
+                }
+            } else {
+                // 저장한 데이터가 없을때
+                showToast("Calibration data is null", true);
+            }
+        }
         setViewAtGazeTrackerState();
     }
 

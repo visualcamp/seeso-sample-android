@@ -49,6 +49,11 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="stop calibration" />
+        <Button
+            android:id="@+id/btn_set_calibration"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="set calibration" />
     </LinearLayout>
 
     <androidx.appcompat.widget.SwitchCompat
@@ -89,6 +94,14 @@
                 android:text="5-point"/>
         </RadioGroup>
     </LinearLayout>
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/txt_gaze_version"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@android:color/holo_blue_bright"
+        android:text="version:"/>
 
     <!-- 시선 좌표 -->
     <visual.camp.sample.view.PointView
