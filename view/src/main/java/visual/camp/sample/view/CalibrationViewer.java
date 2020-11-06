@@ -19,8 +19,8 @@ public class CalibrationViewer extends ViewGroup {
 
   private int[] pointColors;
   private int index = 0;
-  private float x;
-  private float y;
+  private float x = -999;
+  private float y = -999;
   private Paint calibPoint;
   private Boolean toDraw = true;
   private CalibrationPoint calibrationPoint;

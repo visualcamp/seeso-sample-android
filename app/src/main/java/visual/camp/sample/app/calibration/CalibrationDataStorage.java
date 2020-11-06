@@ -12,7 +12,7 @@ public class CalibrationDataStorage {
   private static final String TAG = CalibrationDataStorage.class.getSimpleName();
   private static final String CALIBRATION_DATA = "calibrationData";
 
-  // 캘리브레이션 데이터를 SharedPreferences에 저장
+  // Store calibration data to SharedPreference
   public static void saveCalibrationData(Context context, double[] calibrationData) {
     if (calibrationData != null && calibrationData.length > 0) {
       SharedPreferences.Editor editor = context.getSharedPreferences(TAG, Context.MODE_PRIVATE).edit();
@@ -23,7 +23,7 @@ public class CalibrationDataStorage {
     }
   }
 
-  // SharedPreferences에 저장한 캘리브레이션 데이터를 가져옴
+  // Get calibration data from SharedPreference
   public static @Nullable
   double[] loadCalibrationData(Context context) {
     SharedPreferences prefs = context.getSharedPreferences(TAG, Context.MODE_PRIVATE);

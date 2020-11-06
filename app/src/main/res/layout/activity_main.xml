@@ -9,6 +9,12 @@
         android:id="@+id/preview"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
+    <View
+        android:id="@+id/view_warning_tracking"
+        android:visibility="invisible"
+        android:background="@drawable/red_border_line"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
 
     <LinearLayout
         android:layout_width="200dp"
@@ -56,44 +62,55 @@
             android:text="set calibration" />
     </LinearLayout>
 
-    <androidx.appcompat.widget.SwitchCompat
-        android:id="@+id/sw_use_gaze_filter"
+    <LinearLayout
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textColor="@android:color/holo_blue_bright"
-        android:text="use gaze filter"/>
-    <LinearLayout
-        app:layout_constraintTop_toBottomOf="@id/sw_use_gaze_filter"
-        app:layout_constraintLeft_toLeftOf="parent"
+        android:padding="5dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="vertical">
-        <androidx.appcompat.widget.AppCompatTextView
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/sw_use_gaze_filter"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textColor="@android:color/holo_blue_bright"
-            android:text="calibration type"/>
-        <RadioGroup
-            android:id="@+id/rg_calibration"
+            android:text="use gaze filter"/>
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
-            <androidx.appcompat.widget.AppCompatRadioButton
-                android:id="@+id/rb_calibration_one"
+            android:orientation="vertical">
+            <androidx.appcompat.widget.AppCompatTextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textColor="@android:color/holo_blue_bright"
-                android:text="1-point"/>
-            <androidx.appcompat.widget.AppCompatRadioButton
-                android:id="@+id/rb_calibration_five"
+                android:text="calibration type"/>
+            <RadioGroup
+                android:id="@+id/rg_calibration"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="@android:color/holo_blue_bright"
-                android:text="5-point"/>
-        </RadioGroup>
+                android:orientation="horizontal">
+                <androidx.appcompat.widget.AppCompatRadioButton
+                    android:id="@+id/rb_calibration_one"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@android:color/holo_blue_bright"
+                    android:text="1-point"/>
+                <androidx.appcompat.widget.AppCompatRadioButton
+                    android:id="@+id/rb_calibration_five"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@android:color/holo_blue_bright"
+                    android:text="5-point"/>
+                <androidx.appcompat.widget.AppCompatRadioButton
+                    android:id="@+id/rb_calibration_six"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@android:color/holo_blue_bright"
+                    android:text="6-point"/>
+            </RadioGroup>
+        </LinearLayout>
     </LinearLayout>
+
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/txt_gaze_version"
         app:layout_constraintBottom_toBottomOf="parent"
