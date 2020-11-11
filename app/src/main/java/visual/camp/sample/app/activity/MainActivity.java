@@ -473,8 +473,8 @@ public class MainActivity extends AppCompatActivity {
         if (preview.isAvailable()) {
             // When if textureView available
             setCameraPreview(preview);
-            this.gazeTracker.setCallbacks(gazeCallback, calibrationCallback, statusCallback);
         }
+        this.gazeTracker.setCallbacks(gazeCallback, calibrationCallback, statusCallback);
         startTracking();
         hideProgress();
     }
