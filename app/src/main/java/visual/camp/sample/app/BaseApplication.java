@@ -135,7 +135,7 @@ public class BaseApplication extends Application {
     FAIL_HAS_NO_TRACKER
   }
   public LoadCalibrationResult loadCalibrationData() {
-    if (hasGazeTracker()) {
+    if (!hasGazeTracker()) {
       return LoadCalibrationResult.FAIL_HAS_NO_TRACKER;
     }
 

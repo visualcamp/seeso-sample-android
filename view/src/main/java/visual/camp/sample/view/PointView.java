@@ -40,6 +40,7 @@ public class PointView extends View {
     public static final int TYPE_OUT_OF_SCREEN = 1;
     private int type = TYPE_DEFAULT;
     private Paint paint;
+    private boolean showLine = true;
     private void init() {
         paint = new Paint();
         paint.setColor(defaultColor);
@@ -58,6 +59,14 @@ public class PointView extends View {
         invalidate();
     }
 
+    public void hideLine() {
+      showLine = false;
+    }
+
+    public void showLine() {
+      showLine = true;
+    }
+
     public void setType(int type) {
         paint.setColor(type == TYPE_DEFAULT ? defaultColor : outOfScreenColor);
     }
@@ -66,7 +75,9 @@ public class PointView extends View {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
         canvas.drawCircle(position.x, position.y, 10, paint);
-        canvas.drawLine(0, position.y, getWidth(), position.y, paint);
-        canvas.drawLine(position.x, 0, position.x, getHeight(), paint);
+        if (showLine) {
+          canvas.drawLine(0, position.y, getWidth(), position.y, paint);
+          canvas.drawLine(position.x, 0, position.x, getHeight(), paint);
+        }
     }
 }

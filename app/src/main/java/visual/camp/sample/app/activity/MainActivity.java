@@ -76,7 +76,6 @@ public class MainActivity extends AppCompatActivity {
           // When if textureView available
           baseApplication.setCameraPreview(preview);
         }
-        baseApplication.startGazeTracking();
         Log.i(TAG, "onStart");
     }
 
@@ -86,11 +85,13 @@ public class MainActivity extends AppCompatActivity {
         Log.i(TAG, "onResume");
         // 화면 전환후에도 체크하기 위해
         setOffsetOfView();
+        baseApplication.startGazeTracking();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
+        baseApplication.stopGazeTracking();
         Log.i(TAG, "onPause");
     }
 
@@ -98,7 +99,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onStop() {
         super.onStop();
         baseApplication.removeCameraPreview(preview);
-        baseApplication.stopGazeTracking();
         Log.i(TAG, "onStop");
     }
 
