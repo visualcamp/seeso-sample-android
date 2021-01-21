@@ -29,6 +29,7 @@ import camp.visual.gazetracker.callback.CalibrationCallback;
 import camp.visual.gazetracker.callback.GazeCallback;
 import camp.visual.gazetracker.callback.InitializationCallback;
 import camp.visual.gazetracker.callback.StatusCallback;
+import camp.visual.gazetracker.constant.AccuracyCriteria;
 import camp.visual.gazetracker.constant.CalibrationModeType;
 import camp.visual.gazetracker.constant.InitializationErrorType;
 import camp.visual.gazetracker.constant.StatusErrorType;
@@ -194,7 +195,9 @@ public class MainActivity extends AppCompatActivity {
     private boolean isUseGazeFilter = true;
     // calibration type
     private RadioGroup rgCalibration;
+    private RadioGroup rgAccuracy;
     private CalibrationModeType calibrationType = CalibrationModeType.DEFAULT;
+    private AccuracyCriteria criteria = AccuracyCriteria.DEFAULT;
 
     private AppCompatTextView txtGazeVersion;
     private void initView() {
@@ -232,6 +235,7 @@ public class MainActivity extends AppCompatActivity {
 
         swUseGazeFilter = findViewById(R.id.sw_use_gaze_filter);
         rgCalibration = findViewById(R.id.rg_calibration);
+        rgAccuracy = findViewById(R.id.rg_accuracy);
 
         swUseGazeFilter.setChecked(isUseGazeFilter);
         RadioButton rbCalibrationOne = findViewById(R.id.rb_calibration_one);
@@ -252,6 +256,7 @@ public class MainActivity extends AppCompatActivity {
 
         swUseGazeFilter.setOnCheckedChangeListener(onCheckedChangeSwitch);
         rgCalibration.setOnCheckedChangeListener(onCheckedChangeRadioButton);
+        rgAccuracy.setOnCheckedChangeListener(onCheckedChangeRadioButton);
 
         setOffsetOfView();
     }
@@ -266,6 +271,14 @@ public class MainActivity extends AppCompatActivity {
                     calibrationType = CalibrationModeType.FIVE_POINT;
                 } else if (checkedId == R.id.rb_calibration_six) {
                     calibrationType = CalibrationModeType.SIX_POINT;
+                }
+            } else if (group == rgAccuracy) {
+                if (checkedId == R.id.rb_accuracy_default) {
+                    criteria = AccuracyCriteria.DEFAULT;
+                } else if (checkedId == R.id.rb_accuracy_low) {
+                    criteria = AccuracyCriteria.LOW;
+                } else if (checkedId == R.id.rb_accuracy_high) {
+                    criteria = AccuracyCriteria.HIGH;
                 }
             }
         }
@@ -609,7 +622,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean startCalibration() {
         boolean isSuccess = false;
         if (isGazeNonNull()) {
-            isSuccess = gazeTracker.startCalibration(calibrationType);
+            isSuccess = gazeTracker.startCalibration(calibrationType, criteria);
             if (!isSuccess) {
                 showToast("calibration start fail", false);
             }
