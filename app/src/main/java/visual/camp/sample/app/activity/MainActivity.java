@@ -386,7 +386,7 @@ public class MainActivity extends AppCompatActivity {
             } else if (v == btnSetCalibration) {
                 setCalibration();
             } else if (v == btnGuiDemo) {
-
+                showGuiDemo();
             }
         }
     };
@@ -650,6 +650,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showGuiDemo() {
-      
+      Intent intent = new Intent(getApplicationContext(), DemoActivity.class);
+      startActivity(intent);
     }
 }
