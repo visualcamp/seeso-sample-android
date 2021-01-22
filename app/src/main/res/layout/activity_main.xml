@@ -23,7 +23,7 @@
         android:visibility="visible"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintBottom_toBottomOf="parent">
-        <Button
+      <Button
             android:id="@+id/btn_init_gaze"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -60,6 +60,11 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="set calibration" />
+      <Button
+        android:id="@+id/btn_gui_demo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="gaze path demo" />
     </LinearLayout>
 
     <LinearLayout
