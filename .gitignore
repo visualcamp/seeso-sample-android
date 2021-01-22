@@ -1,0 +1,9 @@
+*/build/
+.DS_Store
+.idea/
+.gradle/
+gradle/
+local.properties
+
+gazetracker-release/*.aar
+libgaze-release/*.aar
