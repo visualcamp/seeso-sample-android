@@ -9,7 +9,7 @@ import camp.visual.gazetracker.filter.OneEuroFilterManager;
 import camp.visual.gazetracker.gaze.GazeInfo;
 import camp.visual.gazetracker.state.EyeMovementState;
 import camp.visual.gazetracker.util.ViewLayoutChecker;
-import visual.camp.sample.app.BaseApplication;
+import visual.camp.sample.app.GazeTrackerManager;
 import visual.camp.sample.app.R;
 import visual.camp.sample.view.GazePathView;
 
@@ -17,14 +17,14 @@ public class DemoActivity extends AppCompatActivity {
   private static final String TAG = DemoActivity.class.getSimpleName();
   private final ViewLayoutChecker viewLayoutChecker = new ViewLayoutChecker();
   private GazePathView gazePathView;
-  private BaseApplication baseApplication;
+  private GazeTrackerManager gazeTrackerManager;
   private final OneEuroFilterManager oneEuroFilterManager = new OneEuroFilterManager(2);
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_demo);
-    baseApplication = (BaseApplication) getApplication();
+    gazeTrackerManager = GazeTrackerManager.getInstance();
     Log.i(TAG, "gazeTracker version: " + GazeTracker.getVersionName());
   }
 
@@ -32,14 +32,14 @@ public class DemoActivity extends AppCompatActivity {
   protected void onStart() {
     super.onStart();
     Log.i(TAG, "onStart");
-    baseApplication.setGazeTrackerCallbacks(gazeCallback);
+    gazeTrackerManager.setGazeTrackerCallbacks(gazeCallback);
     initView();
   }
 
   @Override
   protected void onResume() {
     super.onResume();
-    baseApplication.startGazeTracking();
+    gazeTrackerManager.startGazeTracking();
     setOffsetOfView();
     Log.i(TAG, "onResume");
   }
@@ -47,13 +47,14 @@ public class DemoActivity extends AppCompatActivity {
   @Override
   protected void onPause() {
     super.onPause();
-    baseApplication.stopGazeTracking();
+    gazeTrackerManager.stopGazeTracking();
     Log.i(TAG, "onPause");
   }
 
   @Override
   protected void onStop() {
     super.onStop();
+    gazeTrackerManager.removeCallbacks(gazeCallback);
     Log.i(TAG, "onStop");
   }
 

@@ -39,8 +39,8 @@ import camp.visual.gazetracker.gaze.GazeInfo;
 import camp.visual.gazetracker.state.ScreenState;
 import camp.visual.gazetracker.state.TrackingState;
 import camp.visual.gazetracker.util.ViewLayoutChecker;
-import visual.camp.sample.app.BaseApplication;
-import visual.camp.sample.app.BaseApplication.LoadCalibrationResult;
+import visual.camp.sample.app.GazeTrackerManager;
+import visual.camp.sample.app.GazeTrackerManager.LoadCalibrationResult;
 import visual.camp.sample.app.R;
 import visual.camp.sample.app.calibration.CalibrationDataStorage;
 import visual.camp.sample.view.CalibrationViewer;
@@ -52,7 +52,7 @@ public class MainActivity extends AppCompatActivity {
             Manifest.permission.CAMERA // 시선 추적 input
     };
     private static final int REQ_PERMISSION = 1000;
-    private BaseApplication baseApplication;
+    private GazeTrackerManager gazeTrackerManager;
     private ViewLayoutChecker viewLayoutChecker = new ViewLayoutChecker();
     private HandlerThread backgroundThread = new HandlerThread("background");
     private Handler backgroundHandler;
@@ -61,7 +61,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        baseApplication = (BaseApplication) getApplication();
+        gazeTrackerManager = GazeTrackerManager.makeNewInstance(this);
         Log.i(TAG, "gazeTracker version: " + GazeTracker.getVersionName());
 
         initView();
@@ -74,8 +74,9 @@ public class MainActivity extends AppCompatActivity {
         super.onStart();
         if (preview.isAvailable()) {
           // When if textureView available
-          baseApplication.setCameraPreview(preview);
+          gazeTrackerManager.setCameraPreview(preview);
         }
+        gazeTrackerManager.setGazeTrackerCallbacks(gazeCallback, calibrationCallback, statusCallback);
         Log.i(TAG, "onStart");
     }
 
@@ -85,20 +86,21 @@ public class MainActivity extends AppCompatActivity {
         Log.i(TAG, "onResume");
         // 화면 전환후에도 체크하기 위해
         setOffsetOfView();
-        baseApplication.startGazeTracking();
+        gazeTrackerManager.startGazeTracking();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        baseApplication.stopGazeTracking();
+        gazeTrackerManager.stopGazeTracking();
         Log.i(TAG, "onPause");
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        baseApplication.removeCameraPreview(preview);
+        gazeTrackerManager.removeCameraPreview(preview);
+        gazeTrackerManager.removeCallbacks(gazeCallback, calibrationCallback, statusCallback);
         Log.i(TAG, "onStop");
     }
 
@@ -296,7 +298,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
             // When if textureView available
-          baseApplication.setCameraPreview(preview);
+            gazeTrackerManager.setCameraPreview(preview);
         }
 
         @Override
@@ -463,11 +465,11 @@ public class MainActivity extends AppCompatActivity {
 
     // gazeTracker
     private boolean isTrackerValid() {
-      return baseApplication.hasGazeTracker();
+      return gazeTrackerManager.hasGazeTracker();
     }
 
     private boolean isTracking() {
-      return baseApplication.isTracking();
+      return gazeTrackerManager.isTracking();
     }
 
     private final InitializationCallback initializationCallback = new InitializationCallback() {
@@ -482,7 +484,6 @@ public class MainActivity extends AppCompatActivity {
     };
 
     private void initSuccess(GazeTracker gazeTracker) {
-        baseApplication.setGazeTrackerCallbacks(gazeCallback, calibrationCallback, statusCallback);
         startTracking();
         hideProgress();
     }
@@ -517,7 +518,7 @@ public class MainActivity extends AppCompatActivity {
     private void processOnGaze(GazeInfo gazeInfo) {
       if (gazeInfo.trackingState == TrackingState.SUCCESS) {
         hideTrackingWarning();
-        if (!baseApplication.isCalibrating()) {
+        if (!gazeTrackerManager.isCalibrating()) {
           float[] filtered_gaze = filterGaze(gazeInfo);
           showGazePoint(filtered_gaze[0], filtered_gaze[1], gazeInfo.screenState);
         }
@@ -592,24 +593,24 @@ public class MainActivity extends AppCompatActivity {
 
     private void initGaze() {
         showProgress();
-        baseApplication.initGazeTracker(initializationCallback);
+        gazeTrackerManager.initGazeTracker(initializationCallback);
     }
 
     private void releaseGaze() {
-      baseApplication.deinitGazeTracker();
+      gazeTrackerManager.deinitGazeTracker();
       setViewAtGazeTrackerState();
     }
 
     private void startTracking() {
-      baseApplication.startGazeTracking();
+      gazeTrackerManager.startGazeTracking();
     }
 
     private void stopTracking() {
-      baseApplication.stopGazeTracking();
+      gazeTrackerManager.stopGazeTracking();
     }
 
     private boolean startCalibration() {
-      boolean isSuccess = baseApplication.startCalibration(calibrationType);
+      boolean isSuccess = gazeTrackerManager.startCalibration(calibrationType);
       if (!isSuccess) {
         showToast("calibration start fail", false);
       }
@@ -619,19 +620,19 @@ public class MainActivity extends AppCompatActivity {
 
     // Collect the data samples used for calibration
     private boolean startCollectSamples() {
-      boolean isSuccess = baseApplication.startCollectingCalibrationSamples();
+      boolean isSuccess = gazeTrackerManager.startCollectingCalibrationSamples();
       setViewAtGazeTrackerState();
       return isSuccess;
     }
 
     private void stopCalibration() {
-      baseApplication.stopCalibration();
+      gazeTrackerManager.stopCalibration();
       hideCalibrationView();
       setViewAtGazeTrackerState();
     }
 
     private void setCalibration() {
-      LoadCalibrationResult result = baseApplication.loadCalibrationData();
+      LoadCalibrationResult result = gazeTrackerManager.loadCalibrationData();
       switch (result) {
         case SUCCESS:
           showToast("setCalibrationData success", false);
