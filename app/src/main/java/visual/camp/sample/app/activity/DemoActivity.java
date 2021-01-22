@@ -27,7 +27,8 @@ public class DemoActivity extends AppCompatActivity {
   private final ViewLayoutChecker viewLayoutChecker = new ViewLayoutChecker();
   private GazePathView gazePathView;
   private GazeTrackerManager gazeTrackerManager;
-  private final OneEuroFilterManager oneEuroFilterManager = new OneEuroFilterManager(2);
+  private final OneEuroFilterManager oneEuroFilterManager = new OneEuroFilterManager(
+      2, 30, 0.5F, 0.001F, 1.0F);
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {

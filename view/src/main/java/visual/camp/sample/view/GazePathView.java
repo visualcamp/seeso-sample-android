@@ -21,7 +21,7 @@ public class GazePathView extends View {
   private static final float MAX_POINT_RADIUS = 80;
   private static final long MAX_FIXATION_SIZE_TIME = 1500;
   private static final float SACCADE_LINE_WIDTH = 2.F;
-  private static final long SACCADE_POINT_REFRESH_TIME_MILLIS = 200;
+  private static final long SACCADE_POINT_REFRESH_TIME_MILLIS = 350;
   private static final float MIN_FIXATION_POSITION_THRESHOLD = 80;
   private final int DEFAULT_COLOR = Color.argb(0x74, 0x34, 0x34, 0xff);
 
