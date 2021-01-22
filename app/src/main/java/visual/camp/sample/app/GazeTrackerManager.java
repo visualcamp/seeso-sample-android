@@ -1,9 +1,7 @@
 package visual.camp.sample.app;
 
-import android.app.Application;
-import android.provider.ContactsContract.CommonDataKinds.Im;
+import android.content.Context;
 import android.view.TextureView;
-import android.widget.TextView.SavedState;
 import camp.visual.gazetracker.GazeTracker;
 import camp.visual.gazetracker.callback.CalibrationCallback;
 import camp.visual.gazetracker.callback.GazeCallback;
@@ -16,22 +14,42 @@ import camp.visual.gazetracker.constant.InitializationErrorType;
 import camp.visual.gazetracker.constant.StatusErrorType;
 import camp.visual.gazetracker.device.GazeDevice;
 import camp.visual.gazetracker.gaze.GazeInfo;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 import visual.camp.sample.app.calibration.CalibrationDataStorage;
 
-public class BaseApplication extends Application {
+public class GazeTrackerManager {
   private List<InitializationCallback> initializationCallbacks = new ArrayList<>();
   private List<GazeCallback> gazeCallbacks = new ArrayList<>();
   private List<CalibrationCallback> calibrationCallbacks = new ArrayList<>();
   private List<StatusCallback> statusCallbacks = new ArrayList<>();
   private List<ImageCallback> imageCallbacks = new ArrayList<>();
 
-  private TextureView cameraPreview = null;
+  static private GazeTrackerManager mInstance = null;
+
+  private WeakReference<TextureView> cameraPreview = null;
+  private final WeakReference<Context> mContext;
 
   GazeTracker gazeTracker = null;
   // TODO: change licence key
   String SEESO_LICENSE_KEY = "your license key";
+
+  static public GazeTrackerManager makeNewInstance(Context context) {
+    if (mInstance != null) {
+      mInstance.deinitGazeTracker();
+    }
+    mInstance = new GazeTrackerManager(context);
+    return mInstance;
+  }
+
+  static public GazeTrackerManager getInstance() {
+    return mInstance;
+  }
+
+  private GazeTrackerManager(Context context) {
+    this.mContext = new WeakReference<>(context);
+  }
 
   public boolean hasGazeTracker() {
     return gazeTracker != null;
@@ -40,7 +58,7 @@ public class BaseApplication extends Application {
   public void initGazeTracker(InitializationCallback callback) {
     GazeDevice gazeDevice = new GazeDevice();
     initializationCallbacks.add(callback);
-    GazeTracker.initGazeTracker(getApplicationContext(), gazeDevice, SEESO_LICENSE_KEY, initializationCallback);
+    GazeTracker.initGazeTracker(mContext.get(), gazeDevice, SEESO_LICENSE_KEY, initializationCallback);
   }
 
   public void deinitGazeTracker() {
@@ -135,11 +153,10 @@ public class BaseApplication extends Application {
     FAIL_HAS_NO_TRACKER
   }
   public LoadCalibrationResult loadCalibrationData() {
-    if (hasGazeTracker()) {
+    if (!hasGazeTracker()) {
       return LoadCalibrationResult.FAIL_HAS_NO_TRACKER;
     }
-
-    double[] calibrationData = CalibrationDataStorage.loadCalibrationData(getApplicationContext());
+    double[] calibrationData = CalibrationDataStorage.loadCalibrationData(mContext.get());
     if (calibrationData != null) {
       if (!gazeTracker.setCalibrationData(calibrationData)) {
         return LoadCalibrationResult.FAIL_DOING_CALIBRATION;
@@ -152,14 +169,14 @@ public class BaseApplication extends Application {
   }
 
   public void setCameraPreview(TextureView preview) {
-    this.cameraPreview = preview;
+    this.cameraPreview = new WeakReference<>(preview);
     if (hasGazeTracker()) {
       gazeTracker.setCameraPreview(preview);
     }
   }
 
   public void removeCameraPreview(TextureView preview) {
-    if (this.cameraPreview == preview) {
+    if (this.cameraPreview.get() == preview) {
       this.cameraPreview = null;
       if (hasGazeTracker()) {
         gazeTracker.removeCameraPreview();
@@ -179,7 +196,7 @@ public class BaseApplication extends Application {
       if (gazeTracker != null) {
         gazeTracker.setCallbacks(gazeCallback, calibrationCallback, imageCallback, statusCallback);
         if (cameraPreview != null) {
-          gazeTracker.setCameraPreview(cameraPreview);
+          gazeTracker.setCameraPreview(cameraPreview.get());
         }
       }
     }
@@ -210,14 +227,14 @@ public class BaseApplication extends Application {
 
     @Override
     public void onCalibrationFinished(double[] doubles) {
-      CalibrationDataStorage.saveCalibrationData(getApplicationContext(), doubles);
+      CalibrationDataStorage.saveCalibrationData(mContext.get(), doubles);
       for (CalibrationCallback calibrationCallback : calibrationCallbacks) {
         calibrationCallback.onCalibrationFinished(doubles);
       }
     }
   };
 
-  private ImageCallback imageCallback = new ImageCallback() {
+  private final ImageCallback imageCallback = new ImageCallback() {
     @Override
     public void onImage(long l, byte[] bytes) {
       for (ImageCallback imageCallback : imageCallbacks) {
@@ -226,7 +243,7 @@ public class BaseApplication extends Application {
     }
   };
 
-  private  StatusCallback statusCallback = new StatusCallback() {
+  private final StatusCallback statusCallback = new StatusCallback() {
     @Override
     public void onStarted() {
       for (StatusCallback statusCallback : statusCallbacks) {
@@ -246,11 +263,4 @@ public class BaseApplication extends Application {
     this.gazeTracker = gazeTracker;
   }
 
-  @Override
-  public void onTerminate() {
-    super.onTerminate();
-    if (hasGazeTracker()) {
-      GazeTracker.deinitGazeTracker(gazeTracker);
-    }
-  }
 }
