@@ -1,7 +1,12 @@
 package visual.camp.sample.app.activity;
 
+import android.content.res.AssetManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.PointF;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.ImageView;
 import androidx.appcompat.app.AppCompatActivity;
 import camp.visual.gazetracker.GazeTracker;
 import camp.visual.gazetracker.callback.GazeCallback;
@@ -9,6 +14,10 @@ import camp.visual.gazetracker.filter.OneEuroFilterManager;
 import camp.visual.gazetracker.gaze.GazeInfo;
 import camp.visual.gazetracker.state.EyeMovementState;
 import camp.visual.gazetracker.util.ViewLayoutChecker;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 import visual.camp.sample.app.GazeTrackerManager;
 import visual.camp.sample.app.R;
 import visual.camp.sample.view.GazePathView;
@@ -65,6 +74,20 @@ public class DemoActivity extends AppCompatActivity {
 
   private void initView() {
     gazePathView = findViewById(R.id.gazePathView);
+
+    AssetManager am = getResources().getAssets();
+    InputStream is = null;
+
+    try {
+      is = am.open("palace_seoul.jpg");
+      Bitmap bm = BitmapFactory.decodeStream(is);
+      ImageView catView = findViewById(R.id.catImage);
+      catView.setImageBitmap(bm);
+      is.close();
+
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
   }
 
   private void setOffsetOfView() {
