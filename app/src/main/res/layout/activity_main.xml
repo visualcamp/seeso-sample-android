@@ -113,6 +113,30 @@
                     android:textColor="@android:color/holo_blue_bright"
                     android:text="6-point"/>
             </RadioGroup>
+            <RadioGroup
+            android:id="@+id/rg_accuracy"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <androidx.appcompat.widget.AppCompatRadioButton
+              android:id="@+id/rb_accuracy_default"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:textColor="@android:color/holo_blue_bright"
+              android:text="default"/>
+            <androidx.appcompat.widget.AppCompatRadioButton
+              android:id="@+id/rb_accuracy_low"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:textColor="@android:color/holo_blue_bright"
+              android:text="low"/>
+            <androidx.appcompat.widget.AppCompatRadioButton
+              android:id="@+id/rb_accuracy_high"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:textColor="@android:color/holo_blue_bright"
+              android:text="high"/>
+          </RadioGroup>
         </LinearLayout>
     </LinearLayout>
 
