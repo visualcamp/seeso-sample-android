@@ -9,6 +9,7 @@ import camp.visual.gazetracker.callback.GazeTrackerCallback;
 import camp.visual.gazetracker.callback.ImageCallback;
 import camp.visual.gazetracker.callback.InitializationCallback;
 import camp.visual.gazetracker.callback.StatusCallback;
+import camp.visual.gazetracker.constant.AccuracyCriteria;
 import camp.visual.gazetracker.constant.CalibrationModeType;
 import camp.visual.gazetracker.constant.InitializationErrorType;
 import camp.visual.gazetracker.constant.StatusErrorType;
@@ -110,9 +111,9 @@ public class GazeTrackerManager {
     return false;
   }
 
-  public boolean startCalibration(CalibrationModeType modeType) {
+  public boolean startCalibration(CalibrationModeType modeType, AccuracyCriteria criteria) {
     if (hasGazeTracker()) {
-      return gazeTracker.startCalibration(modeType);
+      return gazeTracker.startCalibration(modeType, criteria);
     }
     return false;
   }

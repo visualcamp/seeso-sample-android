@@ -623,7 +623,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private boolean startCalibration() {
-      boolean isSuccess = baseApplication.startCalibration(calibrationType, criteria);
+      boolean isSuccess = gazeTrackerManager.startCalibration(calibrationType, criteria);
       if (!isSuccess) {
         showToast("calibration start fail", false);
       }
