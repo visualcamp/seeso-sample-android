@@ -23,7 +23,7 @@
         android:visibility="visible"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintBottom_toBottomOf="parent">
-        <Button
+      <Button
             android:id="@+id/btn_init_gaze"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -60,6 +60,11 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="set calibration" />
+      <Button
+        android:id="@+id/btn_gui_demo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="gaze path demo" />
     </LinearLayout>
 
     <LinearLayout
@@ -108,6 +113,30 @@
                     android:textColor="@android:color/holo_blue_bright"
                     android:text="6-point"/>
             </RadioGroup>
+            <RadioGroup
+            android:id="@+id/rg_accuracy"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <androidx.appcompat.widget.AppCompatRadioButton
+              android:id="@+id/rb_accuracy_default"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:textColor="@android:color/holo_blue_bright"
+              android:text="default"/>
+            <androidx.appcompat.widget.AppCompatRadioButton
+              android:id="@+id/rb_accuracy_low"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:textColor="@android:color/holo_blue_bright"
+              android:text="low"/>
+            <androidx.appcompat.widget.AppCompatRadioButton
+              android:id="@+id/rb_accuracy_high"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:textColor="@android:color/holo_blue_bright"
+              android:text="high"/>
+          </RadioGroup>
         </LinearLayout>
     </LinearLayout>
 
