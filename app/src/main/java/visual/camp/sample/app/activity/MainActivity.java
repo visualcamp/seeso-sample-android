@@ -506,9 +506,45 @@ public class MainActivity extends AppCompatActivity {
         if (error == InitializationErrorType.ERROR_CAMERA_PERMISSION) {
             // When if camera permission doesn not exists
             err = "required permission not granted";
-        } else if (error == InitializationErrorType.ERROR_AUTHENTICATE) {
-            // Authentication failure (License Key)
-            err = "authentication failed";
+        } else if (error == InitializationErrorType.AUTH_INVALID_KEY) {
+            // The license key is invalid
+            err = "invalid key";
+        } else if (error == InitializationErrorType.AUTH_INVALID_ENV_USED_DEV_IN_PROD) {
+            // Trying to use dev license key in prod environment
+            err = "dev key in prod env";
+        } else if (error == InitializationErrorType.AUTH_INVALID_ENV_USED_PROD_IN_DEV) {
+            // Trying to use prod license key in dev environment
+            err = "prod key in dev env";
+        } else if (error == InitializationErrorType.AUTH_INVALID_PACKAGE_NAME) {
+            // Using wrong package name
+            err = "invalid package name";
+        } else if (error == InitializationErrorType.AUTH_INVALID_APP_SIGNATURE) {
+            // Using wrong application signature
+            err = "invalid app signature";
+        } else if (error == InitializationErrorType.AUTH_EXCEEDED_FREE_TIER) {
+            // The free usage limit is exceeded
+            err = "exceeded free tier usage";
+        } else if (error == InitializationErrorType.AUTH_DEACTIVATED_KEY) {
+            // Trying to use decativated license key
+            err = "deactivated key";
+        } else if (error == InitializationErrorType.AUTH_INVALID_ACCESS) {
+            // Using invalid access method
+            err = "invalid access";
+        } else if (error == InitializationErrorType.AUTH_UNKNOWN_ERROR) {
+            // Unknown error from the host server
+            err = "unknown error";
+        } else if (error == InitializationErrorType.AUTH_SERVER_ERROR) {
+            // Internal error from the host server
+            err = "server error";
+        } else if (error == InitializationErrorType.AUTH_CANNOT_FIND_HOST) {
+            // Lost connection or using wrong host address
+            err = "cannot find host";
+        } else if (error == InitializationErrorType.AUTH_WRONG_LOCAL_TIME) {
+            // There is a gap between the device time and the server time
+            err = "wrong local time";
+        } else if (error == InitializationErrorType.AUTH_INVALID_KEY_FORMAT) {
+            // Using wrong license key format
+            err = "invalid key format";
         } else  {
             // Gaze library initialization failure
             // It can ba caused by several reasons(i.e. Out of memory).
