@@ -502,20 +502,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initFail(InitializationErrorType error) {
-        String err = "";
-        if (error == InitializationErrorType.ERROR_CAMERA_PERMISSION) {
-            // When if camera permission doesn not exists
-            err = "required permission not granted";
-        } else if (error == InitializationErrorType.ERROR_AUTHENTICATE) {
-            // Authentication failure (License Key)
-            err = "authentication failed";
-        } else  {
-            // Gaze library initialization failure
-            // It can ba caused by several reasons(i.e. Out of memory).
-            err = "init gaze library fail";
-        }
-        showToast(err, false);
-        Log.w(TAG, "error description: " + err);
         hideProgress();
     }
 
