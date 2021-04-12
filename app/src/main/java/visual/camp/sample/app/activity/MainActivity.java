@@ -28,10 +28,12 @@ import androidx.core.content.ContextCompat;
 import camp.visual.gazetracker.GazeTracker;
 import camp.visual.gazetracker.callback.CalibrationCallback;
 import camp.visual.gazetracker.callback.GazeCallback;
+import camp.visual.gazetracker.callback.GazeStatusCallback; // beta
 import camp.visual.gazetracker.callback.InitializationCallback;
 import camp.visual.gazetracker.callback.StatusCallback;
 import camp.visual.gazetracker.constant.AccuracyCriteria;
 import camp.visual.gazetracker.constant.CalibrationModeType;
+import camp.visual.gazetracker.constant.GazeStatusOption; // beta
 import camp.visual.gazetracker.constant.InitializationErrorType;
 import camp.visual.gazetracker.constant.StatusErrorType;
 import camp.visual.gazetracker.device.GazeDevice;
@@ -58,6 +60,8 @@ public class MainActivity extends AppCompatActivity {
     private HandlerThread backgroundThread = new HandlerThread("background");
     private Handler backgroundHandler;
 
+    private boolean isStatusOptionOn = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -77,7 +81,14 @@ public class MainActivity extends AppCompatActivity {
           // When if textureView available
           gazeTrackerManager.setCameraPreview(preview);
         }
-        gazeTrackerManager.setGazeTrackerCallbacks(gazeCallback, calibrationCallback, statusCallback);
+
+        if (!isStatusOptionOn) {
+          // Without Gaze Status Callback
+          gazeTrackerManager.setGazeTrackerCallbacks(gazeCallback, calibrationCallback, statusCallback);
+        } else {
+          // With Gaze Status Callback (beta)
+          gazeTrackerManager.setGazeTrackerCallbacks(gazeCallback, calibrationCallback, statusCallback, gazeStatusCallback);
+        }
         Log.i(TAG, "onStart");
     }
 
@@ -101,7 +112,14 @@ public class MainActivity extends AppCompatActivity {
     protected void onStop() {
         super.onStop();
         gazeTrackerManager.removeCameraPreview(preview);
-        gazeTrackerManager.removeCallbacks(gazeCallback, calibrationCallback, statusCallback);
+
+        if (!isStatusOptionOn) {
+            // Without Gaze Status Callback
+            gazeTrackerManager.removeCallbacks(gazeCallback, calibrationCallback, statusCallback);
+        } else {
+            // With Gaze Status Callback (beta)
+            gazeTrackerManager.removeCallbacks(gazeCallback, calibrationCallback, statusCallback, gazeStatusCallback);
+        }
         Log.i(TAG, "onStop");
     }
 
@@ -514,6 +532,24 @@ public class MainActivity extends AppCompatActivity {
       }
     };
 
+    // Gaze Status Callback (beta)
+    private final GazeStatusCallback gazeStatusCallback = new GazeStatusCallback() {
+        @Override
+        public void onAttention(float attentionScore) {
+          Log.i(TAG, "check Gaze Status Attention Rate " + attentionScore);
+        }
+
+        @Override
+        public void onBlink(boolean isBlinkLeft, boolean isBlinkRight, boolean isBlink, float eyeOpenness) {
+          Log.i(TAG, "check Gaze Status Blink " +  "Left: " + isBlinkLeft + ", Right: " + isBlinkRight + ", Blink: " + isBlink + ", eyeOpenness: " + eyeOpenness);
+        }
+
+        @Override
+        public void onDrowsiness(boolean isDrowsiness) {
+          Log.i(TAG, "check Gaze Status Drowsiness " + isDrowsiness);
+        }
+    };
+
     private void processOnGaze(GazeInfo gazeInfo) {
       if (gazeInfo.trackingState == TrackingState.SUCCESS) {
         hideTrackingWarning();
@@ -592,7 +628,21 @@ public class MainActivity extends AppCompatActivity {
 
     private void initGaze() {
         showProgress();
+
+        // Without Gaze Status
+        isStatusOptionOn = false;
         gazeTrackerManager.initGazeTracker(initializationCallback);
+
+        // With Gaze Status (beta)
+        /*
+        isStatusOptionOn = true;
+        GazeStatusOption[] statusOptions = new GazeStatusOption[] {
+                GazeStatusOption.STATUS_BLINK,
+                GazeStatusOption.STATUS_DROWSINESS,
+                GazeStatusOption.STATUS_ATTENTION
+        };
+        gazeTrackerManager.initGazeTracker(initializationCallback, statusOptions);
+        */
     }
 
     private void releaseGaze() {
