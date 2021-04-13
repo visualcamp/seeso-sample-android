@@ -48,6 +48,9 @@ import visual.camp.sample.app.R;
 import visual.camp.sample.app.calibration.CalibrationDataStorage;
 import visual.camp.sample.view.CalibrationViewer;
 import visual.camp.sample.view.PointView;
+import visual.camp.sample.view.EyeBlinkView;
+import visual.camp.sample.view.AttentionView;
+import visual.camp.sample.view.DrowsinessView;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = MainActivity.class.getSimpleName();
@@ -219,6 +222,9 @@ public class MainActivity extends AppCompatActivity {
     private Button btnStartCalibration, btnStopCalibration, btnSetCalibration;
     private Button btnGuiDemo;
     private CalibrationViewer viewCalibration;
+    private EyeBlinkView viewEyeBlink;
+    private AttentionView viewAttention;
+    private DrowsinessView viewDrowsiness;
 
     // gaze coord filter
     private SwitchCompat swUseGazeFilter;
@@ -269,6 +275,10 @@ public class MainActivity extends AppCompatActivity {
         swUseGazeFilter = findViewById(R.id.sw_use_gaze_filter);
         rgCalibration = findViewById(R.id.rg_calibration);
         rgAccuracy = findViewById(R.id.rg_accuracy);
+
+        viewEyeBlink = findViewById(R.id.view_eye_blink);
+        viewAttention = findViewById(R.id.view_attention);
+        viewDrowsiness = findViewById(R.id.view_drowsiness);
 
         swUseGazeFilter.setChecked(isUseGazeFilter);
         RadioButton rbCalibrationOne = findViewById(R.id.rb_calibration_one);
@@ -537,16 +547,21 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onAttention(float attentionScore) {
           Log.i(TAG, "check Gaze Status Attention Rate " + attentionScore);
+            viewAttention.setAttention(attentionScore, 0.75f);
         }
 
         @Override
         public void onBlink(boolean isBlinkLeft, boolean isBlinkRight, boolean isBlink, float eyeOpenness) {
           Log.i(TAG, "check Gaze Status Blink " +  "Left: " + isBlinkLeft + ", Right: " + isBlinkRight + ", Blink: " + isBlink + ", eyeOpenness: " + eyeOpenness);
+          viewEyeBlink.setOneEyeBlink(false, isBlinkLeft);
+          viewEyeBlink.setOneEyeBlink(true, isBlinkRight);
+          viewEyeBlink.setEyeBlink(isBlink);
         }
 
         @Override
         public void onDrowsiness(boolean isDrowsiness) {
           Log.i(TAG, "check Gaze Status Drowsiness " + isDrowsiness);
+          viewDrowsiness.setDrowsiness(isDrowsiness);
         }
     };
 
@@ -611,6 +626,7 @@ public class MainActivity extends AppCompatActivity {
             // isTracking false
             // When if camera stream stopping
             setViewAtGazeTrackerState();
+
             if (error != StatusErrorType.ERROR_NONE) {
                 switch (error) {
                     case ERROR_CAMERA_START:
@@ -630,11 +646,11 @@ public class MainActivity extends AppCompatActivity {
         showProgress();
 
         // Without Gaze Status
-        isStatusOptionOn = false;
-        gazeTrackerManager.initGazeTracker(initializationCallback);
+        //isStatusOptionOn = false;
+        //gazeTrackerManager.initGazeTracker(initializationCallback);
 
         // With Gaze Status (beta)
-        /*
+
         isStatusOptionOn = true;
         GazeStatusOption[] statusOptions = new GazeStatusOption[] {
                 GazeStatusOption.STATUS_BLINK,
@@ -642,7 +658,7 @@ public class MainActivity extends AppCompatActivity {
                 GazeStatusOption.STATUS_ATTENTION
         };
         gazeTrackerManager.initGazeTracker(initializationCallback, statusOptions);
-        */
+
     }
 
     private void releaseGaze() {

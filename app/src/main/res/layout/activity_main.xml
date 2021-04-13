@@ -9,12 +9,41 @@
         android:id="@+id/preview"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
+
     <View
         android:id="@+id/view_warning_tracking"
         android:visibility="invisible"
         android:background="@drawable/red_border_line"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
+
+    <LinearLayout
+        android:layout_width="200dip"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <visual.camp.sample.view.EyeBlinkView
+            android:id="@+id/view_eye_blink"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+        </visual.camp.sample.view.EyeBlinkView>
+
+        <visual.camp.sample.view.AttentionView
+            android:id="@+id/view_attention"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+        </visual.camp.sample.view.AttentionView>
+
+        <visual.camp.sample.view.DrowsinessView
+            android:id="@+id/view_drowsiness"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+    </LinearLayout>
 
     <LinearLayout
         android:layout_width="200dp"
@@ -150,6 +179,7 @@
         android:text="version:"/>
 
     <!-- 시선 좌표 -->
+
     <visual.camp.sample.view.PointView
         android:id="@+id/view_point"
         android:layout_width="match_parent"
@@ -159,7 +189,9 @@
         android:id="@+id/view_calibration"
         android:visibility="invisible"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        android:layout_height="match_parent">
+
+    </visual.camp.sample.view.CalibrationViewer>
 
     <include layout="@layout/layout_progress"/>
 
