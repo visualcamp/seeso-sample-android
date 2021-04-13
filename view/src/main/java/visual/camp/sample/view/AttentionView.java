@@ -6,11 +6,14 @@ import android.os.Build.VERSION_CODES;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.AttributeSet;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
+
+import java.util.ArrayList;
 
 public class AttentionView extends LinearLayout {
   public AttentionView(Context context) {
@@ -37,21 +40,66 @@ public class AttentionView extends LinearLayout {
   }
 
   private Handler uiHandler = new Handler(Looper.getMainLooper());
-
-  private ImageView imgAttention;
+  private ArrayList<Float> attentionHistory = new ArrayList<Float>();
+  private int averageFpsTime = 150;
+  private float threshold = 0.75f;
+  private ImageView imgAttention, imgAttentionAvg;
   private Drawable drawableAttentionOn, drawableAttentionOff;
+  private Drawable drawableAttentionAveOn, drawableAttentionAveOff;
   private void init() {
     inflate(getContext(), R.layout.view_attention, this);
     imgAttention = findViewById(R.id.img_attention);
+    imgAttentionAvg = findViewById(R.id.img_attention_avg);
 
     drawableAttentionOn = getContext().getDrawable(R.drawable.attention_on_48);
     drawableAttentionOff = getContext().getDrawable(R.drawable.attention_off_48);
+    drawableAttentionAveOn = getContext().getDrawable(R.drawable.attention_on_avg_48);;
+    drawableAttentionAveOff = getContext().getDrawable(R.drawable.attention_off_avg_48);;
   }
 
-  public void setAttention(final float attention, final float threshold) {
+  public void setAverageFpsTime(final int fpsTime) {
+    averageFpsTime = fpsTime;
+  }
+
+  public void setAverageVisible(final boolean isVisible) {
+    if (isVisible) {
+      imgAttentionAvg.setVisibility(View.VISIBLE);
+    } else {
+      imgAttentionAvg.setVisibility(View.INVISIBLE);
+    }
+  }
+
+  public void setAttentionAvg(final float attention) {
     uiHandler.post(new Runnable() {
       @Override
       public void run() {
+        attentionHistory.add(new Float(attention));
+
+        if (attentionHistory.size() > averageFpsTime) {
+          attentionHistory.remove(0);
+
+          float average = 0.0f;
+
+          for (Float att : attentionHistory) {
+            average = average + att.floatValue();
+          }
+          average /= attentionHistory.size();
+
+          if (average >= threshold) {
+            imgAttentionAvg.setImageDrawable(drawableAttentionAveOn);
+          } else{
+            imgAttentionAvg.setImageDrawable(drawableAttentionAveOff);
+          }
+        }
+      }
+    });
+  }
+
+  public void setAttention(final float attention) {
+    uiHandler.post(new Runnable() {
+      @Override
+      public void run() {
+
         if (attention >= threshold) {
           imgAttention.setImageDrawable(drawableAttentionOn);
         } else {

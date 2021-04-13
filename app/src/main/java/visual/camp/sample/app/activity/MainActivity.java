@@ -28,12 +28,12 @@ import androidx.core.content.ContextCompat;
 import camp.visual.gazetracker.GazeTracker;
 import camp.visual.gazetracker.callback.CalibrationCallback;
 import camp.visual.gazetracker.callback.GazeCallback;
-import camp.visual.gazetracker.callback.GazeStatusCallback; // beta
+import camp.visual.gazetracker.callback.GazeStatusCallback;
 import camp.visual.gazetracker.callback.InitializationCallback;
 import camp.visual.gazetracker.callback.StatusCallback;
 import camp.visual.gazetracker.constant.AccuracyCriteria;
 import camp.visual.gazetracker.constant.CalibrationModeType;
-import camp.visual.gazetracker.constant.GazeStatusOption; // beta
+import camp.visual.gazetracker.constant.GazeStatusOption;
 import camp.visual.gazetracker.constant.InitializationErrorType;
 import camp.visual.gazetracker.constant.StatusErrorType;
 import camp.visual.gazetracker.device.GazeDevice;
@@ -63,8 +63,6 @@ public class MainActivity extends AppCompatActivity {
     private HandlerThread backgroundThread = new HandlerThread("background");
     private Handler backgroundHandler;
 
-    private boolean isStatusOptionOn = false;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -85,13 +83,7 @@ public class MainActivity extends AppCompatActivity {
           gazeTrackerManager.setCameraPreview(preview);
         }
 
-        if (!isStatusOptionOn) {
-          // Without Gaze Status Callback
-          gazeTrackerManager.setGazeTrackerCallbacks(gazeCallback, calibrationCallback, statusCallback);
-        } else {
-          // With Gaze Status Callback (beta)
-          gazeTrackerManager.setGazeTrackerCallbacks(gazeCallback, calibrationCallback, statusCallback, gazeStatusCallback);
-        }
+        gazeTrackerManager.setGazeTrackerCallbacks(gazeCallback, calibrationCallback, statusCallback, gazeStatusCallback);
         Log.i(TAG, "onStart");
     }
 
@@ -116,13 +108,7 @@ public class MainActivity extends AppCompatActivity {
         super.onStop();
         gazeTrackerManager.removeCameraPreview(preview);
 
-        if (!isStatusOptionOn) {
-            // Without Gaze Status Callback
-            gazeTrackerManager.removeCallbacks(gazeCallback, calibrationCallback, statusCallback);
-        } else {
-            // With Gaze Status Callback (beta)
-            gazeTrackerManager.removeCallbacks(gazeCallback, calibrationCallback, statusCallback, gazeStatusCallback);
-        }
+        gazeTrackerManager.removeCallbacks(gazeCallback, calibrationCallback, statusCallback, gazeStatusCallback);
         Log.i(TAG, "onStop");
     }
 
@@ -228,7 +214,14 @@ public class MainActivity extends AppCompatActivity {
 
     // gaze coord filter
     private SwitchCompat swUseGazeFilter;
+    private SwitchCompat swStatusBlink, swStatusAttention, swStatusAttentionAvg, swStatusDrowsiness;
     private boolean isUseGazeFilter = true;
+    private boolean isStatusBlink = false;
+    private boolean isStatusAttention = false;
+    private boolean isStatusAttentionAvg = false;
+    private boolean isStatusDrowsiness = false;
+    private int activeStatusCount = 0;
+
     // calibration type
     private RadioGroup rgCalibration;
     private RadioGroup rgAccuracy;
@@ -280,10 +273,21 @@ public class MainActivity extends AppCompatActivity {
         viewAttention = findViewById(R.id.view_attention);
         viewDrowsiness = findViewById(R.id.view_drowsiness);
 
+        swStatusBlink = findViewById(R.id.sw_status_blink);
+        swStatusAttention = findViewById(R.id.sw_status_attention);
+        swStatusAttentionAvg = findViewById(R.id.sw_status_attention_average);
+        swStatusDrowsiness = findViewById(R.id.sw_status_drowsiness);
+
         swUseGazeFilter.setChecked(isUseGazeFilter);
+        swStatusBlink.setChecked(isStatusBlink);
+        swStatusAttention.setChecked(isStatusAttention);
+        swStatusAttentionAvg.setChecked(isStatusAttentionAvg);
+        swStatusDrowsiness.setChecked(isStatusDrowsiness);
+
         RadioButton rbCalibrationOne = findViewById(R.id.rb_calibration_one);
         RadioButton rbCalibrationFive = findViewById(R.id.rb_calibration_five);
         RadioButton rbCalibrationSix = findViewById(R.id.rb_calibration_six);
+
         switch (calibrationType) {
             case ONE_POINT:
                 rbCalibrationOne.setChecked(true);
@@ -298,6 +302,17 @@ public class MainActivity extends AppCompatActivity {
         }
 
         swUseGazeFilter.setOnCheckedChangeListener(onCheckedChangeSwitch);
+        swStatusBlink.setOnCheckedChangeListener(onCheckedChangeSwitch);
+        swStatusAttention.setOnCheckedChangeListener(onCheckedChangeSwitch);
+        swStatusAttentionAvg.setOnCheckedChangeListener(onCheckedChangeSwitch);
+        swStatusDrowsiness.setOnCheckedChangeListener(onCheckedChangeSwitch);
+
+        viewEyeBlink.setVisibility(View.INVISIBLE);
+        viewAttention.setVisibility(View.INVISIBLE);
+        viewDrowsiness.setVisibility(View.INVISIBLE);
+        viewAttention.setAverageVisible(false);
+        swStatusAttentionAvg.setEnabled(false);
+
         rgCalibration.setOnCheckedChangeListener(onCheckedChangeRadioButton);
         rgAccuracy.setOnCheckedChangeListener(onCheckedChangeRadioButton);
 
@@ -326,11 +341,79 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     };
+
     private SwitchCompat.OnCheckedChangeListener onCheckedChangeSwitch = new CompoundButton.OnCheckedChangeListener() {
         @Override
         public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+            boolean isUpdated = false;
+
             if (buttonView == swUseGazeFilter) {
                 isUseGazeFilter = isChecked;
+            } else if (buttonView == swStatusBlink) {
+                isStatusBlink = isChecked;
+                if (isStatusBlink) {
+                    viewEyeBlink.setVisibility(View.VISIBLE);
+                    activeStatusCount++;
+                } else {
+                    viewEyeBlink.setVisibility(View.INVISIBLE);
+                    activeStatusCount--;
+                }
+                isUpdated = true;
+            } else if (buttonView == swStatusAttention) {
+                isStatusAttention = isChecked;
+                if (isStatusAttention) {
+                    viewAttention.setVisibility(View.VISIBLE);
+                    swStatusAttentionAvg.setEnabled(true);
+                    viewAttention.setAverageFpsTime(150);
+                    activeStatusCount++;
+                } else {
+                    viewAttention.setVisibility(View.INVISIBLE);
+                    swStatusAttentionAvg.setChecked(false);
+                    isStatusAttentionAvg = false;
+                    swStatusAttentionAvg.setEnabled(false);
+                    activeStatusCount--;
+                }
+                isUpdated = true;
+            } else if (buttonView == swStatusAttentionAvg) {
+                isStatusAttentionAvg = isChecked;
+                if (isStatusAttention && isStatusAttentionAvg) {
+                    viewAttention.setAverageVisible(true);
+                } else {
+                    viewAttention.setAverageVisible(false);
+                }
+            } else if (buttonView == swStatusDrowsiness) {
+                isStatusDrowsiness = isChecked;
+                if (isStatusDrowsiness) {
+                    viewDrowsiness.setVisibility(View.VISIBLE);
+                    activeStatusCount++;
+                } else {
+                    viewDrowsiness.setVisibility(View.INVISIBLE);
+                    activeStatusCount--;
+                }
+                isUpdated = true;
+            }
+
+            if (isUpdated) {
+                int index = 0;
+                GazeStatusOption[] statusOptions = new GazeStatusOption[activeStatusCount];
+
+                if (isStatusBlink) {
+                    statusOptions[index] = GazeStatusOption.STATUS_BLINK;
+                    index++;
+                }
+
+                if (isStatusAttention) {
+                    statusOptions[index] = GazeStatusOption.STATUS_ATTENTION;
+                    index++;
+                }
+
+                if (isStatusDrowsiness) {
+                    statusOptions[index] = GazeStatusOption.STATUS_DROWSINESS;
+                    index++;
+                }
+
+                gazeTrackerManager.deinitGazeTracker();
+                gazeTrackerManager.initGazeTracker(initializationCallback, statusOptions);
             }
         }
     };
@@ -542,19 +625,19 @@ public class MainActivity extends AppCompatActivity {
       }
     };
 
-    // Gaze Status Callback (beta)
     private final GazeStatusCallback gazeStatusCallback = new GazeStatusCallback() {
         @Override
         public void onAttention(float attentionScore) {
           Log.i(TAG, "check Gaze Status Attention Rate " + attentionScore);
-            viewAttention.setAttention(attentionScore, 0.75f);
+            viewAttention.setAttention(attentionScore);
+            viewAttention.setAttentionAvg(attentionScore);
         }
 
         @Override
         public void onBlink(boolean isBlinkLeft, boolean isBlinkRight, boolean isBlink, float eyeOpenness) {
           Log.i(TAG, "check Gaze Status Blink " +  "Left: " + isBlinkLeft + ", Right: " + isBlinkRight + ", Blink: " + isBlink + ", eyeOpenness: " + eyeOpenness);
-          viewEyeBlink.setOneEyeBlink(false, isBlinkLeft);
-          viewEyeBlink.setOneEyeBlink(true, isBlinkRight);
+          viewEyeBlink.setLeftEyeBlink(isBlinkLeft);
+          viewEyeBlink.setRightEyeBlink(isBlinkRight);
           viewEyeBlink.setEyeBlink(isBlink);
         }
 
@@ -645,20 +728,10 @@ public class MainActivity extends AppCompatActivity {
     private void initGaze() {
         showProgress();
 
-        // Without Gaze Status
-        isStatusOptionOn = false;
-        gazeTrackerManager.initGazeTracker(initializationCallback);
-
-        // With Gaze Status (beta)
-        /*
-        isStatusOptionOn = true;
         GazeStatusOption[] statusOptions = new GazeStatusOption[] {
-                GazeStatusOption.STATUS_BLINK,
-                GazeStatusOption.STATUS_DROWSINESS,
-                GazeStatusOption.STATUS_ATTENTION
+
         };
         gazeTrackerManager.initGazeTracker(initializationCallback, statusOptions);
-        */
     }
 
     private void releaseGaze() {

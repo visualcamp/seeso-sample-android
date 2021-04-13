@@ -53,26 +53,32 @@ public class EyeBlinkView extends LinearLayout {
     drawableEyeClosed = getContext().getDrawable(R.drawable.twotone_visibility_off_black_48);
   }
 
-  public void setOneEyeBlink(final boolean isRightEye, final boolean isBlink) {
+  public void setLeftEyeBlink(final boolean isBlink) {
     uiHandler.post(new Runnable() {
       @Override
       public void run() {
         if (isBlink) {
-          if (isRightEye) {
-            imgRightEye.setImageDrawable(drawableOneEyeClosed);
-          } else {
-            imgLeftEye.setImageDrawable(drawableOneEyeClosed);
-          }
+          imgLeftEye.setImageDrawable(drawableOneEyeClosed);
         } else {
-          if (isRightEye) {
-            imgRightEye.setImageDrawable(drawableOneEyeOpen);
-          } else {
-            imgLeftEye.setImageDrawable(drawableOneEyeOpen);
-          }
+          imgLeftEye.setImageDrawable(drawableOneEyeOpen);
         }
       }
     });
   }
+
+  public void setRightEyeBlink(final boolean isBlink) {
+    uiHandler.post(new Runnable() {
+      @Override
+      public void run() {
+        if (isBlink) {
+          imgRightEye.setImageDrawable(drawableOneEyeClosed);
+        } else {
+          imgRightEye.setImageDrawable(drawableOneEyeOpen);
+        }
+      }
+    });
+  }
+
   public void setEyeBlink(final boolean isBlink) {
     uiHandler.post(new Runnable() {
       @Override

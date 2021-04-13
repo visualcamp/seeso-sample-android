@@ -13,6 +13,17 @@
     android:layout_height="match_parent"/>`
 
   <ImageView
+      android:id="@+id/img_attention_avg"
+      android:layout_width="48dp"
+      android:layout_height="48dp"
+      app:srcCompat="@drawable/attention_off_avg_48" />
+
+  <View
+      android:id="@+id/view"
+      android:layout_width="23dp"
+      android:layout_height="match_parent" />
+
+  <ImageView
       android:id="@+id/img_attention"
       android:layout_width="48dp"
       android:layout_height="48dp"
