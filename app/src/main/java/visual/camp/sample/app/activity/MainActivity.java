@@ -646,11 +646,11 @@ public class MainActivity extends AppCompatActivity {
         showProgress();
 
         // Without Gaze Status
-        //isStatusOptionOn = false;
-        //gazeTrackerManager.initGazeTracker(initializationCallback);
+        isStatusOptionOn = false;
+        gazeTrackerManager.initGazeTracker(initializationCallback);
 
         // With Gaze Status (beta)
-
+        /*
         isStatusOptionOn = true;
         GazeStatusOption[] statusOptions = new GazeStatusOption[] {
                 GazeStatusOption.STATUS_BLINK,
@@ -658,7 +658,7 @@ public class MainActivity extends AppCompatActivity {
                 GazeStatusOption.STATUS_ATTENTION
         };
         gazeTrackerManager.initGazeTracker(initializationCallback, statusOptions);
-
+        */
     }
 
     private void releaseGaze() {
