@@ -194,7 +194,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void permissionGranted() {
-        initGaze();
+        setViewAtGazeTrackerState();
     }
     // permission end
 
@@ -315,7 +315,9 @@ public class MainActivity extends AppCompatActivity {
         viewAttention.setAverageVisible(false);
         swStatusAttentionAvg.setEnabled(false);
 
+        hideProgress();
         setOffsetOfView();
+        setViewAtGazeTrackerState();
     }
 
     private RadioGroup.OnCheckedChangeListener onCheckedChangeRadioButton = new RadioGroup.OnCheckedChangeListener() {
@@ -344,8 +346,6 @@ public class MainActivity extends AppCompatActivity {
     private SwitchCompat.OnCheckedChangeListener onCheckedChangeSwitch = new CompoundButton.OnCheckedChangeListener() {
         @Override
         public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-            boolean isUpdated = false;
-
             if (buttonView == swUseGazeFilter) {
                 isUseGazeFilter = isChecked;
             } else if (buttonView == swStatusBlink) {
@@ -357,7 +357,6 @@ public class MainActivity extends AppCompatActivity {
                     viewEyeBlink.setVisibility(View.INVISIBLE);
                     activeStatusCount--;
                 }
-                isUpdated = true;
             } else if (buttonView == swStatusAttention) {
                 isStatusAttention = isChecked;
                 if (isStatusAttention) {
@@ -372,7 +371,6 @@ public class MainActivity extends AppCompatActivity {
                     swStatusAttentionAvg.setEnabled(false);
                     activeStatusCount--;
                 }
-                isUpdated = true;
             } else if (buttonView == swStatusAttentionAvg) {
                 isStatusAttentionAvg = isChecked;
                 if (isStatusAttention && isStatusAttentionAvg) {
@@ -389,30 +387,6 @@ public class MainActivity extends AppCompatActivity {
                     viewDrowsiness.setVisibility(View.INVISIBLE);
                     activeStatusCount--;
                 }
-                isUpdated = true;
-            }
-
-            if (isUpdated && isTrackerValid()) {
-                int index = 0;
-                GazeStatusOption[] statusOptions = new GazeStatusOption[activeStatusCount];
-
-                if (isStatusBlink) {
-                    statusOptions[index] = GazeStatusOption.STATUS_BLINK;
-                    index++;
-                }
-
-                if (isStatusAttention) {
-                    statusOptions[index] = GazeStatusOption.STATUS_ATTENTION;
-                    index++;
-                }
-
-                if (isStatusDrowsiness) {
-                    statusOptions[index] = GazeStatusOption.STATUS_DROWSINESS;
-                    index++;
-                }
-
-                gazeTrackerManager.deinitGazeTracker();
-                gazeTrackerManager.initGazeTracker(initializationCallback, statusOptions);
             }
         }
     };
@@ -584,6 +558,28 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private void setStatusSwitchState(final boolean isEnabled) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (!isEnabled) {
+                    swStatusBlink.setEnabled(false);
+                    swStatusAttention.setEnabled(false);
+                    swStatusAttentionAvg.setEnabled(false);
+                    swStatusDrowsiness.setEnabled(false);
+                } else {
+                    swStatusBlink.setEnabled(true);
+                    swStatusAttention.setEnabled(true);
+                    swStatusDrowsiness.setEnabled(true);
+
+                    if (swStatusAttention.isChecked()) {
+                        swStatusAttentionAvg.setEnabled(true);
+                    }
+                }
+            }
+        });
+    }
+
     // view end
 
     // gazeTracker
@@ -607,7 +603,7 @@ public class MainActivity extends AppCompatActivity {
     };
 
     private void initSuccess(GazeTracker gazeTracker) {
-        startTracking();
+        setViewAtGazeTrackerState();
         hideProgress();
     }
 
@@ -746,10 +742,12 @@ public class MainActivity extends AppCompatActivity {
         }
 
         gazeTrackerManager.initGazeTracker(initializationCallback, statusOptions);
+        setStatusSwitchState(false);
     }
 
     private void releaseGaze() {
       gazeTrackerManager.deinitGazeTracker();
+      setStatusSwitchState(true);
       setViewAtGazeTrackerState();
     }
 

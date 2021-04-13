@@ -158,6 +158,7 @@
                     android:layout_height="wrap_content"
                     android:text="6-point"
                     android:textColor="@android:color/holo_blue_bright" />
+
             </RadioGroup>
 
             <RadioGroup
@@ -186,7 +187,14 @@
                     android:layout_height="wrap_content"
                     android:text="high"
                     android:textColor="@android:color/holo_blue_bright" />
+
             </RadioGroup>
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Gaze Status"
+                android:textColor="@android:color/holo_blue_bright" />
 
             <LinearLayout
                 android:layout_width="wrap_content"
