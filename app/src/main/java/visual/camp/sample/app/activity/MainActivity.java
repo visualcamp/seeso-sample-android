@@ -306,15 +306,14 @@ public class MainActivity extends AppCompatActivity {
         swStatusAttention.setOnCheckedChangeListener(onCheckedChangeSwitch);
         swStatusAttentionAvg.setOnCheckedChangeListener(onCheckedChangeSwitch);
         swStatusDrowsiness.setOnCheckedChangeListener(onCheckedChangeSwitch);
+        rgCalibration.setOnCheckedChangeListener(onCheckedChangeRadioButton);
+        rgAccuracy.setOnCheckedChangeListener(onCheckedChangeRadioButton);
 
         viewEyeBlink.setVisibility(View.INVISIBLE);
         viewAttention.setVisibility(View.INVISIBLE);
         viewDrowsiness.setVisibility(View.INVISIBLE);
         viewAttention.setAverageVisible(false);
         swStatusAttentionAvg.setEnabled(false);
-
-        rgCalibration.setOnCheckedChangeListener(onCheckedChangeRadioButton);
-        rgAccuracy.setOnCheckedChangeListener(onCheckedChangeRadioButton);
 
         setOffsetOfView();
     }
@@ -393,7 +392,7 @@ public class MainActivity extends AppCompatActivity {
                 isUpdated = true;
             }
 
-            if (isUpdated) {
+            if (isUpdated && isTrackerValid()) {
                 int index = 0;
                 GazeStatusOption[] statusOptions = new GazeStatusOption[activeStatusCount];
 
@@ -728,9 +727,24 @@ public class MainActivity extends AppCompatActivity {
     private void initGaze() {
         showProgress();
 
-        GazeStatusOption[] statusOptions = new GazeStatusOption[] {
+        int index = 0;
+        GazeStatusOption[] statusOptions = new GazeStatusOption[activeStatusCount];
 
-        };
+        if (isStatusBlink) {
+            statusOptions[index] = GazeStatusOption.STATUS_BLINK;
+            index++;
+        }
+
+        if (isStatusAttention) {
+            statusOptions[index] = GazeStatusOption.STATUS_ATTENTION;
+            index++;
+        }
+
+        if (isStatusDrowsiness) {
+            statusOptions[index] = GazeStatusOption.STATUS_DROWSINESS;
+            index++;
+        }
+
         gazeTrackerManager.initGazeTracker(initializationCallback, statusOptions);
     }
 
