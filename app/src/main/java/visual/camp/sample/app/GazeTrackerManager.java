@@ -5,7 +5,7 @@ import android.view.TextureView;
 import camp.visual.gazetracker.GazeTracker;
 import camp.visual.gazetracker.callback.CalibrationCallback;
 import camp.visual.gazetracker.callback.GazeCallback;
-import camp.visual.gazetracker.callback.GazeStatusCallback; // beta
+import camp.visual.gazetracker.callback.GazeStatusCallback;
 import camp.visual.gazetracker.callback.GazeTrackerCallback;
 import camp.visual.gazetracker.callback.ImageCallback;
 import camp.visual.gazetracker.callback.InitializationCallback;
@@ -14,7 +14,7 @@ import camp.visual.gazetracker.constant.AccuracyCriteria;
 import camp.visual.gazetracker.constant.CalibrationModeType;
 import camp.visual.gazetracker.constant.InitializationErrorType;
 import camp.visual.gazetracker.constant.StatusErrorType;
-import camp.visual.gazetracker.constant.GazeStatusOption; // beta
+import camp.visual.gazetracker.constant.GazeStatusOption;
 import camp.visual.gazetracker.device.GazeDevice;
 import camp.visual.gazetracker.gaze.GazeInfo;
 import java.lang.ref.WeakReference;
@@ -28,8 +28,6 @@ public class GazeTrackerManager {
   private List<CalibrationCallback> calibrationCallbacks = new ArrayList<>();
   private List<StatusCallback> statusCallbacks = new ArrayList<>();
   private List<ImageCallback> imageCallbacks = new ArrayList<>();
-
-  // Gaze Status Callbacks (beta)
   private List<GazeStatusCallback> gazeStatusCallbacks = new ArrayList<>();
 
   static private GazeTrackerManager mInstance = null;
@@ -61,20 +59,11 @@ public class GazeTrackerManager {
     return gazeTracker != null;
   }
 
-  // Without Gaze Status
-  public void initGazeTracker(InitializationCallback callback) {
-    GazeDevice gazeDevice = new GazeDevice();
-    initializationCallbacks.add(callback);
-
-    GazeTracker.initGazeTracker(mContext.get(), gazeDevice, SEESO_LICENSE_KEY, initializationCallback);
-  }
-
-  // With Gaze Status (beta)
   public void initGazeTracker(InitializationCallback callback, GazeStatusOption[] options) {
     GazeDevice gazeDevice = new GazeDevice();
     initializationCallbacks.add(callback);
 
-    GazeTracker.initGazeTracker(mContext.get(), gazeDevice, SEESO_LICENSE_KEY, initializationCallbackWithOptions, options);
+    GazeTracker.initGazeTracker(mContext.get(), gazeDevice, SEESO_LICENSE_KEY, initializationCallback, options);
   }
 
   public void deinitGazeTracker() {
@@ -99,7 +88,6 @@ public class GazeTrackerManager {
         statusCallbacks.add((StatusCallback) callback);
 
       } else if (callback instanceof GazeStatusCallback) {
-        // Add Gaze Status Callback (Beta)
         gazeStatusCallbacks.add((GazeStatusCallback) callback);
       }
     }
@@ -205,27 +193,7 @@ public class GazeTrackerManager {
   }
 
   // GazeTracker Callbacks
-
-  // Without Gaze Status
   private final InitializationCallback initializationCallback = new InitializationCallback() {
-    @Override
-    public void onInitialized(GazeTracker gazeTracker, InitializationErrorType initializationErrorType) {
-      setGazeTracker(gazeTracker);
-      for (InitializationCallback initializationCallback : initializationCallbacks) {
-        initializationCallback.onInitialized(gazeTracker, initializationErrorType);
-      }
-      initializationCallbacks.clear();
-      if (gazeTracker != null) {
-        gazeTracker.setCallbacks(gazeCallback, calibrationCallback, imageCallback, statusCallback);
-        if (cameraPreview != null) {
-          gazeTracker.setCameraPreview(cameraPreview.get());
-        }
-      }
-    }
-  };
-
-  // With Gaze Status (beta)
-  private final InitializationCallback initializationCallbackWithOptions = new InitializationCallback() {
     @Override
     public void onInitialized(GazeTracker gazeTracker, InitializationErrorType initializationErrorType) {
       setGazeTracker(gazeTracker);
@@ -251,7 +219,6 @@ public class GazeTrackerManager {
     }
   };
 
-  // Gaze Status Callback (beta)
   private GazeStatusCallback gazeStatusCallback = new GazeStatusCallback() {
     @Override
     public void onAttention(float attentionScore) {
