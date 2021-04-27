@@ -28,15 +28,14 @@ import androidx.core.content.ContextCompat;
 import camp.visual.gazetracker.GazeTracker;
 import camp.visual.gazetracker.callback.CalibrationCallback;
 import camp.visual.gazetracker.callback.GazeCallback;
-import camp.visual.gazetracker.callback.GazeStatusCallback;
+import camp.visual.gazetracker.callback.UserStatusCallback;
 import camp.visual.gazetracker.callback.InitializationCallback;
 import camp.visual.gazetracker.callback.StatusCallback;
 import camp.visual.gazetracker.constant.AccuracyCriteria;
 import camp.visual.gazetracker.constant.CalibrationModeType;
-import camp.visual.gazetracker.constant.GazeStatusOption;
 import camp.visual.gazetracker.constant.InitializationErrorType;
 import camp.visual.gazetracker.constant.StatusErrorType;
-import camp.visual.gazetracker.device.GazeDevice;
+import camp.visual.gazetracker.constant.UserStatusOption;
 import camp.visual.gazetracker.filter.OneEuroFilterManager;
 import camp.visual.gazetracker.gaze.GazeInfo;
 import camp.visual.gazetracker.state.ScreenState;
@@ -45,7 +44,6 @@ import camp.visual.gazetracker.util.ViewLayoutChecker;
 import visual.camp.sample.app.GazeTrackerManager;
 import visual.camp.sample.app.GazeTrackerManager.LoadCalibrationResult;
 import visual.camp.sample.app.R;
-import visual.camp.sample.app.calibration.CalibrationDataStorage;
 import visual.camp.sample.view.CalibrationViewer;
 import visual.camp.sample.view.PointView;
 import visual.camp.sample.view.EyeBlinkView;
@@ -83,7 +81,7 @@ public class MainActivity extends AppCompatActivity {
           gazeTrackerManager.setCameraPreview(preview);
         }
 
-        gazeTrackerManager.setGazeTrackerCallbacks(gazeCallback, calibrationCallback, statusCallback, gazeStatusCallback);
+        gazeTrackerManager.setGazeTrackerCallbacks(gazeCallback, calibrationCallback, statusCallback, userStatusCallback);
         Log.i(TAG, "onStart");
     }
 
@@ -108,7 +106,7 @@ public class MainActivity extends AppCompatActivity {
         super.onStop();
         gazeTrackerManager.removeCameraPreview(preview);
 
-        gazeTrackerManager.removeCallbacks(gazeCallback, calibrationCallback, statusCallback, gazeStatusCallback);
+        gazeTrackerManager.removeCallbacks(gazeCallback, calibrationCallback, statusCallback, userStatusCallback);
         Log.i(TAG, "onStop");
     }
 
@@ -620,7 +618,7 @@ public class MainActivity extends AppCompatActivity {
       }
     };
 
-    private final GazeStatusCallback gazeStatusCallback = new GazeStatusCallback() {
+    private final UserStatusCallback userStatusCallback = new UserStatusCallback() {
         @Override
         public void onAttention(float attentionScore) {
           Log.i(TAG, "check Gaze Status Attention Rate " + attentionScore);
@@ -723,25 +721,12 @@ public class MainActivity extends AppCompatActivity {
     private void initGaze() {
         showProgress();
 
-        int index = 0;
-        GazeStatusOption[] statusOptions = new GazeStatusOption[activeStatusCount];
+        UserStatusOption userStatusOption = new UserStatusOption();
+        userStatusOption.setUseAttention(isStatusAttention);
+        userStatusOption.setUseBlink(isStatusBlink);
+        userStatusOption.setUseDrowsiness(isStatusDrowsiness);
 
-        if (isStatusBlink) {
-            statusOptions[index] = GazeStatusOption.STATUS_BLINK;
-            index++;
-        }
-
-        if (isStatusAttention) {
-            statusOptions[index] = GazeStatusOption.STATUS_ATTENTION;
-            index++;
-        }
-
-        if (isStatusDrowsiness) {
-            statusOptions[index] = GazeStatusOption.STATUS_DROWSINESS;
-            index++;
-        }
-
-        gazeTrackerManager.initGazeTracker(initializationCallback, statusOptions);
+        gazeTrackerManager.initGazeTracker(initializationCallback, userStatusOption);
         setStatusSwitchState(false);
     }
 
