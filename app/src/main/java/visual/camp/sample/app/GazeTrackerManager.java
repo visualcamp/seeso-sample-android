@@ -29,7 +29,7 @@ public class GazeTrackerManager {
   private List<CalibrationCallback> calibrationCallbacks = new ArrayList<>();
   private List<StatusCallback> statusCallbacks = new ArrayList<>();
   private List<ImageCallback> imageCallbacks = new ArrayList<>();
-  private List<UserStatusCallback> gazeStatusCallbacks = new ArrayList<>();
+  private List<UserStatusCallback> userStatusCallbacks = new ArrayList<>();
 
   static private GazeTrackerManager mInstance = null;
 
@@ -89,7 +89,7 @@ public class GazeTrackerManager {
         statusCallbacks.add((StatusCallback) callback);
 
       } else if (callback instanceof UserStatusCallback) {
-        gazeStatusCallbacks.add((UserStatusCallback) callback);
+        userStatusCallbacks.add((UserStatusCallback) callback);
       }
     }
   }
@@ -203,7 +203,7 @@ public class GazeTrackerManager {
       }
       initializationCallbacks.clear();
       if (gazeTracker != null) {
-        gazeTracker.setCallbacks(gazeCallback, calibrationCallback, imageCallback, statusCallback, gazeStatusCallback);
+        gazeTracker.setCallbacks(gazeCallback, calibrationCallback, imageCallback, statusCallback, userStatusCallback);
         if (cameraPreview != null) {
           gazeTracker.setCameraPreview(cameraPreview.get());
         }
@@ -220,25 +220,25 @@ public class GazeTrackerManager {
     }
   };
 
-  private UserStatusCallback gazeStatusCallback = new UserStatusCallback() {
+  private UserStatusCallback userStatusCallback = new UserStatusCallback() {
     @Override
-    public void onAttention(float attentionScore) {
-      for (UserStatusCallback gazeStatusCallback : gazeStatusCallbacks) {
-        gazeStatusCallback.onAttention(attentionScore);
+    public void onAttention(long timestamp, float attentionScore) {
+      for (UserStatusCallback userStatusCallback : userStatusCallbacks) {
+        userStatusCallback.onAttention(timestamp, attentionScore);
       }
     }
 
     @Override
-    public void onBlink(boolean isBlinkLeft, boolean isBlinkRight, boolean isBlink, float eyeOpenness) {
-      for (UserStatusCallback gazeStatusCallback : gazeStatusCallbacks) {
-        gazeStatusCallback.onBlink(isBlinkLeft, isBlinkRight, isBlink, eyeOpenness);
+    public void onBlink(long timestamp, boolean isBlinkLeft, boolean isBlinkRight, boolean isBlink, float eyeOpenness) {
+      for (UserStatusCallback userStatusCallback : userStatusCallbacks) {
+        userStatusCallback.onBlink(timestamp, isBlinkLeft, isBlinkRight, isBlink, eyeOpenness);
       }
     }
 
     @Override
-    public void onDrowsiness(boolean isDrowsiness) {
-      for (UserStatusCallback gazeStatusCallback : gazeStatusCallbacks) {
-        gazeStatusCallback.onDrowsiness(isDrowsiness);
+    public void onDrowsiness(long timestamp, boolean isDrowsiness) {
+      for (UserStatusCallback userStatusCallback : userStatusCallbacks) {
+        userStatusCallback.onDrowsiness(timestamp, isDrowsiness);
       }
     }
   };

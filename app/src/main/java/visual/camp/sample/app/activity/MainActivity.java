@@ -620,23 +620,23 @@ public class MainActivity extends AppCompatActivity {
 
     private final UserStatusCallback userStatusCallback = new UserStatusCallback() {
         @Override
-        public void onAttention(float attentionScore) {
-          Log.i(TAG, "check Gaze Status Attention Rate " + attentionScore);
+        public void onAttention(long timestamp, float attentionScore) {
+          Log.i(TAG, "check User Status Attention Rate " + attentionScore);
             viewAttention.setAttention(attentionScore);
             viewAttention.setAttentionAvg(attentionScore);
         }
 
         @Override
-        public void onBlink(boolean isBlinkLeft, boolean isBlinkRight, boolean isBlink, float eyeOpenness) {
-          Log.i(TAG, "check Gaze Status Blink " +  "Left: " + isBlinkLeft + ", Right: " + isBlinkRight + ", Blink: " + isBlink + ", eyeOpenness: " + eyeOpenness);
+        public void onBlink(long timestamp, boolean isBlinkLeft, boolean isBlinkRight, boolean isBlink, float eyeOpenness) {
+          Log.i(TAG, "check User Status Blink " +  "Left: " + isBlinkLeft + ", Right: " + isBlinkRight + ", Blink: " + isBlink + ", eyeOpenness: " + eyeOpenness);
           viewEyeBlink.setLeftEyeBlink(isBlinkLeft);
           viewEyeBlink.setRightEyeBlink(isBlinkRight);
           viewEyeBlink.setEyeBlink(isBlink);
         }
 
         @Override
-        public void onDrowsiness(boolean isDrowsiness) {
-          Log.i(TAG, "check Gaze Status Drowsiness " + isDrowsiness);
+        public void onDrowsiness(long timestamp, boolean isDrowsiness) {
+          Log.i(TAG, "check User Status Drowsiness " + isDrowsiness);
           viewDrowsiness.setDrowsiness(isDrowsiness);
         }
     };
@@ -725,6 +725,7 @@ public class MainActivity extends AppCompatActivity {
         userStatusOption.setUseAttention(isStatusAttention);
         userStatusOption.setUseBlink(isStatusBlink);
         userStatusOption.setUseDrowsiness(isStatusDrowsiness);
+        Log.i(TAG, "init option attention " + isStatusAttention + ", blink " + isStatusBlink + ", drowsiness " + isStatusDrowsiness);
 
         gazeTrackerManager.initGazeTracker(initializationCallback, userStatusOption);
         setStatusSwitchState(false);

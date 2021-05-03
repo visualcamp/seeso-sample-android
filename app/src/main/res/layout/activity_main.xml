@@ -193,7 +193,7 @@
             <androidx.appcompat.widget.AppCompatTextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Gaze Status"
+                android:text="User Status"
                 android:textColor="@android:color/holo_blue_bright" />
 
             <LinearLayout
