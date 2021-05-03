@@ -5,7 +5,7 @@ android {
     compileSdkVersion rootProject.compileSdkVersion
 
     defaultConfig {
-        applicationId "camp.visual.android.seesosample"
+        applicationId "camp.visual.android.sample.seesosample"
         minSdkVersion rootProject.minSdkVersion
         targetSdkVersion rootProject.targetSdkVersion
         versionCode 1
