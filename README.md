@@ -1,4 +1,4 @@
-# SDKSample
+# SeeSo Sample Android 
 
 ## sample
 - app: 기본 샘플앱
