@@ -620,7 +620,7 @@ public class MainActivity extends AppCompatActivity {
 
     private final UserStatusCallback userStatusCallback = new UserStatusCallback() {
         @Override
-        public void onAttention(long timestamp, float attentionScore) {
+        public void onAttention(long timestampBegin, long timestampEnd, float attentionScore) {
           Log.i(TAG, "check User Status Attention Rate " + attentionScore);
             viewAttention.setAttention(attentionScore);
             viewAttention.setAttentionAvg(attentionScore);
