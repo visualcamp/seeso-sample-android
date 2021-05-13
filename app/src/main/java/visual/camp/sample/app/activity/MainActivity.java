@@ -212,11 +212,10 @@ public class MainActivity extends AppCompatActivity {
 
     // gaze coord filter
     private SwitchCompat swUseGazeFilter;
-    private SwitchCompat swStatusBlink, swStatusAttention, swStatusAttentionAvg, swStatusDrowsiness;
+    private SwitchCompat swStatusBlink, swStatusAttention, swStatusDrowsiness;
     private boolean isUseGazeFilter = true;
     private boolean isStatusBlink = false;
     private boolean isStatusAttention = false;
-    private boolean isStatusAttentionAvg = false;
     private boolean isStatusDrowsiness = false;
     private int activeStatusCount = 0;
 
@@ -273,13 +272,11 @@ public class MainActivity extends AppCompatActivity {
 
         swStatusBlink = findViewById(R.id.sw_status_blink);
         swStatusAttention = findViewById(R.id.sw_status_attention);
-        swStatusAttentionAvg = findViewById(R.id.sw_status_attention_average);
         swStatusDrowsiness = findViewById(R.id.sw_status_drowsiness);
 
         swUseGazeFilter.setChecked(isUseGazeFilter);
         swStatusBlink.setChecked(isStatusBlink);
         swStatusAttention.setChecked(isStatusAttention);
-        swStatusAttentionAvg.setChecked(isStatusAttentionAvg);
         swStatusDrowsiness.setChecked(isStatusDrowsiness);
 
         RadioButton rbCalibrationOne = findViewById(R.id.rb_calibration_one);
@@ -302,7 +299,6 @@ public class MainActivity extends AppCompatActivity {
         swUseGazeFilter.setOnCheckedChangeListener(onCheckedChangeSwitch);
         swStatusBlink.setOnCheckedChangeListener(onCheckedChangeSwitch);
         swStatusAttention.setOnCheckedChangeListener(onCheckedChangeSwitch);
-        swStatusAttentionAvg.setOnCheckedChangeListener(onCheckedChangeSwitch);
         swStatusDrowsiness.setOnCheckedChangeListener(onCheckedChangeSwitch);
         rgCalibration.setOnCheckedChangeListener(onCheckedChangeRadioButton);
         rgAccuracy.setOnCheckedChangeListener(onCheckedChangeRadioButton);
@@ -310,8 +306,6 @@ public class MainActivity extends AppCompatActivity {
         viewEyeBlink.setVisibility(View.INVISIBLE);
         viewAttention.setVisibility(View.INVISIBLE);
         viewDrowsiness.setVisibility(View.INVISIBLE);
-        viewAttention.setAverageVisible(false);
-        swStatusAttentionAvg.setEnabled(false);
 
         hideProgress();
         setOffsetOfView();
@@ -359,22 +353,10 @@ public class MainActivity extends AppCompatActivity {
                 isStatusAttention = isChecked;
                 if (isStatusAttention) {
                     viewAttention.setVisibility(View.VISIBLE);
-                    swStatusAttentionAvg.setEnabled(true);
-                    viewAttention.setAverageFpsTime(150);
                     activeStatusCount++;
                 } else {
                     viewAttention.setVisibility(View.INVISIBLE);
-                    swStatusAttentionAvg.setChecked(false);
-                    isStatusAttentionAvg = false;
-                    swStatusAttentionAvg.setEnabled(false);
                     activeStatusCount--;
-                }
-            } else if (buttonView == swStatusAttentionAvg) {
-                isStatusAttentionAvg = isChecked;
-                if (isStatusAttention && isStatusAttentionAvg) {
-                    viewAttention.setAverageVisible(true);
-                } else {
-                    viewAttention.setAverageVisible(false);
                 }
             } else if (buttonView == swStatusDrowsiness) {
                 isStatusDrowsiness = isChecked;
@@ -563,16 +545,11 @@ public class MainActivity extends AppCompatActivity {
                 if (!isEnabled) {
                     swStatusBlink.setEnabled(false);
                     swStatusAttention.setEnabled(false);
-                    swStatusAttentionAvg.setEnabled(false);
                     swStatusDrowsiness.setEnabled(false);
                 } else {
                     swStatusBlink.setEnabled(true);
                     swStatusAttention.setEnabled(true);
                     swStatusDrowsiness.setEnabled(true);
-
-                    if (swStatusAttention.isChecked()) {
-                        swStatusAttentionAvg.setEnabled(true);
-                    }
                 }
             }
         });
@@ -620,10 +597,9 @@ public class MainActivity extends AppCompatActivity {
 
     private final UserStatusCallback userStatusCallback = new UserStatusCallback() {
         @Override
-        public void onAttention(long timestamp, float attentionScore) {
+        public void onAttention(long timestampBegin, long timestampEnd, float attentionScore) {
           Log.i(TAG, "check User Status Attention Rate " + attentionScore);
             viewAttention.setAttention(attentionScore);
-            viewAttention.setAttentionAvg(attentionScore);
         }
 
         @Override
@@ -722,9 +698,16 @@ public class MainActivity extends AppCompatActivity {
         showProgress();
 
         UserStatusOption userStatusOption = new UserStatusOption();
-        userStatusOption.setUseAttention(isStatusAttention);
-        userStatusOption.setUseBlink(isStatusBlink);
-        userStatusOption.setUseDrowsiness(isStatusDrowsiness);
+        if (isStatusAttention) {
+          userStatusOption.useAttention();
+        }
+        if (isStatusBlink) {
+          userStatusOption.useBlink();
+        }
+        if (isStatusDrowsiness) {
+          userStatusOption.useDrowsiness();
+        }
+
         Log.i(TAG, "init option attention " + isStatusAttention + ", blink " + isStatusBlink + ", drowsiness " + isStatusDrowsiness);
 
         gazeTrackerManager.initGazeTracker(initializationCallback, userStatusOption);

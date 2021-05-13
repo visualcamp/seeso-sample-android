@@ -222,9 +222,9 @@ public class GazeTrackerManager {
 
   private UserStatusCallback userStatusCallback = new UserStatusCallback() {
     @Override
-    public void onAttention(long timestamp, float attentionScore) {
+    public void onAttention(long timestampBegin, long timestampEnd, float attentionScore) {
       for (UserStatusCallback userStatusCallback : userStatusCallbacks) {
-        userStatusCallback.onAttention(timestamp, attentionScore);
+        userStatusCallback.onAttention(timestampBegin, timestampEnd, attentionScore);
       }
     }
 
