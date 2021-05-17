@@ -8,7 +8,7 @@ buildscript {
         
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.6.1'
+        classpath 'com.android.tools.build:gradle:4.1.3'
         
 
         // NOTE: Do not place your application dependencies here; they belong
@@ -29,12 +29,12 @@ task clean(type: Delete) {
 }
 
 ext {
-    buildToolsVersion = "29.0.3"
+    buildToolsVersion = "30.0.3"
     minSdkVersion = 23
-    compileSdkVersion = 29
-    targetSdkVersion = 29
+    compileSdkVersion = 30
+    targetSdkVersion = 30
 
-    appcompatVersion = '1.1.0'
-    constraintlayoutVersion = '1.1.3'
+    appcompatVersion = '1.2.0'
+    constraintlayoutVersion = '2.0.4'
     androidXRecyclerview = '1.1.0'
 }

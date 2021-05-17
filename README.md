@@ -9,7 +9,7 @@
 
 ### 난독화하려면 proguard-rules.pro에 추가해야함
 ```
--keep interface camp.visual.libgaze.callbacks.jni.LibGazeJNICallback {
+-keep class camp.visual.libgaze.callbacks.JNICallbackDispatcher {
   *;
 }
 ```
