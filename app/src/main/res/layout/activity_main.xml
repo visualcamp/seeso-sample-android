@@ -19,91 +19,98 @@
         android:visibility="invisible" />
 
     <LinearLayout
-        android:layout_width="200dip"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
-
-        <visual.camp.sample.view.EyeBlinkView
-            android:id="@+id/view_eye_blink"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            tools:visibility="invisible">
-
-        </visual.camp.sample.view.EyeBlinkView>
-
-        <visual.camp.sample.view.AttentionView
-            android:id="@+id/view_attention"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            tools:visibility="invisible">
-
-        </visual.camp.sample.view.AttentionView>
-
-        <visual.camp.sample.view.DrowsinessView
-            android:id="@+id/view_drowsiness"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            tools:visibility="invisible" />
-
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="200dp"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:visibility="visible"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintRight_toRightOf="parent">
-
-        <Button
-            android:id="@+id/btn_init_gaze"
-            android:layout_width="match_parent"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+        <LinearLayout
+            android:layout_width="200dip"
             android:layout_height="wrap_content"
-            android:text="init gaze" />
+            android:orientation="vertical">
 
-        <Button
-            android:id="@+id/btn_release_gaze"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="release gaze" />
+            <visual.camp.sample.view.EyeBlinkView
+                android:id="@+id/view_eye_blink"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                tools:visibility="invisible">
 
-        <Button
-            android:id="@+id/btn_start_tracking"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="start tracking" />
+            </visual.camp.sample.view.EyeBlinkView>
 
-        <Button
-            android:id="@+id/btn_stop_tracking"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="stop tracking" />
+            <visual.camp.sample.view.AttentionView
+                android:id="@+id/view_attention"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                tools:visibility="invisible">
 
-        <Button
-            android:id="@+id/btn_start_calibration"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="start calibration" />
+            </visual.camp.sample.view.AttentionView>
 
-        <Button
-            android:id="@+id/btn_stop_calibration"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="stop calibration" />
+            <visual.camp.sample.view.DrowsinessView
+                android:id="@+id/view_drowsiness"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                tools:visibility="invisible" />
 
-        <Button
-            android:id="@+id/btn_set_calibration"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="set calibration" />
+        </LinearLayout>
 
-        <Button
-            android:id="@+id/btn_gui_demo"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="gaze path demo" />
+        <ScrollView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <LinearLayout
+                android:layout_width="200dp"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="visible">
+
+                <Button
+                    android:id="@+id/btn_init_gaze"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="init gaze" />
+
+                <Button
+                    android:id="@+id/btn_release_gaze"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="release gaze" />
+
+                <Button
+                    android:id="@+id/btn_start_tracking"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="start tracking" />
+
+                <Button
+                    android:id="@+id/btn_stop_tracking"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="stop tracking" />
+
+                <Button
+                    android:id="@+id/btn_start_calibration"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="start calibration" />
+
+                <Button
+                    android:id="@+id/btn_stop_calibration"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="stop calibration" />
+
+                <Button
+                    android:id="@+id/btn_set_calibration"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="set calibration" />
+
+                <Button
+                    android:id="@+id/btn_gui_demo"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="gaze path demo" />
+            </LinearLayout>
+        </ScrollView>
     </LinearLayout>
 
     <LinearLayout

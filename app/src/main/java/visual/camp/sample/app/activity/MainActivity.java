@@ -303,9 +303,9 @@ public class MainActivity extends AppCompatActivity {
         rgCalibration.setOnCheckedChangeListener(onCheckedChangeRadioButton);
         rgAccuracy.setOnCheckedChangeListener(onCheckedChangeRadioButton);
 
-        viewEyeBlink.setVisibility(View.INVISIBLE);
-        viewAttention.setVisibility(View.INVISIBLE);
-        viewDrowsiness.setVisibility(View.INVISIBLE);
+        viewEyeBlink.setVisibility(View.GONE);
+        viewAttention.setVisibility(View.GONE);
+        viewDrowsiness.setVisibility(View.GONE);
 
         hideProgress();
         setOffsetOfView();
@@ -346,7 +346,7 @@ public class MainActivity extends AppCompatActivity {
                     viewEyeBlink.setVisibility(View.VISIBLE);
                     activeStatusCount++;
                 } else {
-                    viewEyeBlink.setVisibility(View.INVISIBLE);
+                    viewEyeBlink.setVisibility(View.GONE);
                     activeStatusCount--;
                 }
             } else if (buttonView == swStatusAttention) {
@@ -355,7 +355,7 @@ public class MainActivity extends AppCompatActivity {
                     viewAttention.setVisibility(View.VISIBLE);
                     activeStatusCount++;
                 } else {
-                    viewAttention.setVisibility(View.INVISIBLE);
+                    viewAttention.setVisibility(View.GONE);
                     activeStatusCount--;
                 }
             } else if (buttonView == swStatusDrowsiness) {
@@ -364,7 +364,7 @@ public class MainActivity extends AppCompatActivity {
                     viewDrowsiness.setVisibility(View.VISIBLE);
                     activeStatusCount++;
                 } else {
-                    viewDrowsiness.setVisibility(View.INVISIBLE);
+                    viewDrowsiness.setVisibility(View.GONE);
                     activeStatusCount--;
                 }
             }
