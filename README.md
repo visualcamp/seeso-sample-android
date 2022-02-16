@@ -16,6 +16,9 @@ In 2021, SeeSo was recognized for its innovative technology and won GLOMO Award 
 2. Has simple and quick calibration (1-5 points)
 3. Has high accuracy and robustness compared to its competitors.
 
+### Tips
+Developers using the `3.0.0-beta-1` version must checkout the `v3.0.0-beta` branch.
+
 ## Documentation
 * Overview: https://docs.seeso.io/nonversioning/document/seeso-sdk-overview
 * Quick Start: https://docs.seeso.io/nonversioning/quick-start/android-quick-start
