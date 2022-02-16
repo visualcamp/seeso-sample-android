@@ -4,7 +4,7 @@
 <div align="center">
     <h1>SeeSo Android Sample</h1>
     <a href="https://github.com/visualcamp/seeso-sample-android/releases" alt="release">
-        <img src="https://img.shields.io/badge/version-2.4.0-blue" />
+        <img src="https://img.shields.io/badge/version-2.5.1-blue" />
     </a>
 </div>
 
@@ -16,21 +16,24 @@ In 2021, SeeSo was recognized for its innovative technology and won GLOMO Award 
 2. Has simple and quick calibration (1-5 points)
 3. Has high accuracy and robustness compared to its competitors.
 
+### Tips
+Developers using the `3.0.0-beta-1` version must checkout the `v3.0.0-beta` branch.
+
 ## Documentation
-* Overview: https://docs.seeso.io/docs/seeso-sdk-overview/
-* Quick Start: https://docs.seeso.io/docs/android-quick-start/
-* API: https://docs.seeso.io/docs/android-api-docs/
+* Overview: https://docs.seeso.io/nonversioning/document/seeso-sdk-overview
+* Quick Start: https://docs.seeso.io/nonversioning/quick-start/android-quick-start
+* API: https://docs.seeso.io/docs/api/android-api-docs
 
 ## Requirements
 * minSdkVersion: 23
 * targetSdkVersion: 30
 * It must be run on a real Android device.
 * It must be an internet environment.
-* [SeeSo Android SDK](https://console.seeso.io/)
-* Must be issued a license key in [SeeSo Console](https://console.seeso.io/)
+* [SeeSo Android SDK](https://manage.seeso.io/)
+* Must be issued a license key in [SeeSo Manage](https://manage.seeso.io/)
 
 ## Setting License Key
-* Get a license key from https://console.seeso.io and copy your key to [`GazeTrackerManager.java`](/app/src/main/java/visual/camp/sample/app/GazeTrackerManager.java#L41)
+* Get a license key from https://manage.seeso.io and copy your key to [`GazeTrackerManager.java`](/app/src/main/java/visual/camp/sample/app/GazeTrackerManager.java#L41)
    ```
    // TODO: change licence key
    String SEESO_LICENSE_KEY = "your license key";
