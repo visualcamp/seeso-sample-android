@@ -15,7 +15,6 @@ import camp.visual.gazetracker.constant.CalibrationModeType;
 import camp.visual.gazetracker.constant.InitializationErrorType;
 import camp.visual.gazetracker.constant.StatusErrorType;
 import camp.visual.gazetracker.constant.UserStatusOption;
-import camp.visual.gazetracker.device.GazeDevice;
 import camp.visual.gazetracker.gaze.GazeInfo;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -61,10 +60,9 @@ public class GazeTrackerManager {
   }
 
   public void initGazeTracker(InitializationCallback callback, UserStatusOption option) {
-    GazeDevice gazeDevice = new GazeDevice();
     initializationCallbacks.add(callback);
 
-    GazeTracker.initGazeTracker(mContext.get(), gazeDevice, SEESO_LICENSE_KEY, initializationCallback, option);
+    GazeTracker.initGazeTracker(mContext.get(), SEESO_LICENSE_KEY, initializationCallback, option);
   }
 
   public void deinitGazeTracker() {
