@@ -4,7 +4,6 @@
 <div align="center">
     <h1>SeeSo Android Sample</h1>
     <a href="https://github.com/visualcamp/seeso-sample-android/releases" alt="release">
-
         <img src="https://img.shields.io/badge/version-3.0.0-blue" />
     </a>
 </div>
@@ -19,7 +18,7 @@ In 2021, SeeSo was recognized for its innovative technology and won GLOMO Award 
 
 
 ## Documentation
-* Overview: https://docs.seeso.io/nonversioning/document/seeso-sdk-overview
+* Overview: https://docs.seeso.io/docs/document/seeso-sdk-overview
 * Quick Start: https://docs.seeso.io/nonversioning/quick-start/android-quick-start
 * API: https://docs.seeso.io/docs/api/android-api-docs
 
