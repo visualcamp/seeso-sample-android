@@ -32,7 +32,7 @@ In 2021, SeeSo was recognized for its innovative technology and won GLOMO Award 
 
 ## Setting License Key
 * Get a license key from https://manage.seeso.io and copy your key to [`GazeTrackerManager.java`](/app/src/main/java/visual/camp/sample/app/GazeTrackerManager.java#L41)
-   ```
+   ```java
    // TODO: change licence key
    String SEESO_LICENSE_KEY = "your license key";
    ```
