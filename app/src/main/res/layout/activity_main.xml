@@ -249,6 +249,12 @@
         android:id="@+id/view_point"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
+
+    <visual.camp.sample.view.FaceBoxView
+     android:id="@+id/view_face_box"
+      android:layout_width="match_parent"
+      android:layout_height="match_parent" />
+
     <!-- 캘리브레이션 뷰 -->
     <visual.camp.sample.view.CalibrationViewer
         android:id="@+id/view_calibration"

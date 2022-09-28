@@ -4,6 +4,7 @@ import android.content.Context;
 import android.view.TextureView;
 import camp.visual.gazetracker.GazeTracker;
 import camp.visual.gazetracker.callback.CalibrationCallback;
+import camp.visual.gazetracker.callback.FaceCallback;
 import camp.visual.gazetracker.callback.GazeCallback;
 import camp.visual.gazetracker.callback.UserStatusCallback;
 import camp.visual.gazetracker.callback.GazeTrackerCallback;
@@ -15,6 +16,7 @@ import camp.visual.gazetracker.constant.CalibrationModeType;
 import camp.visual.gazetracker.constant.InitializationErrorType;
 import camp.visual.gazetracker.constant.StatusErrorType;
 import camp.visual.gazetracker.constant.UserStatusOption;
+import camp.visual.gazetracker.face.FaceInfo;
 import camp.visual.gazetracker.gaze.GazeInfo;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -29,6 +31,7 @@ public class GazeTrackerManager {
   private List<StatusCallback> statusCallbacks = new ArrayList<>();
   private List<ImageCallback> imageCallbacks = new ArrayList<>();
   private List<UserStatusCallback> userStatusCallbacks = new ArrayList<>();
+  private List<FaceCallback> faceCallbacks = new ArrayList<>();
 
   static private GazeTrackerManager mInstance = null;
 
@@ -88,6 +91,8 @@ public class GazeTrackerManager {
 
       } else if (callback instanceof UserStatusCallback) {
         userStatusCallbacks.add((UserStatusCallback) callback);
+      } else if (callback instanceof FaceCallback) {
+        faceCallbacks.add((FaceCallback) callback);
       }
     }
   }
@@ -98,6 +103,7 @@ public class GazeTrackerManager {
       calibrationCallbacks.remove(callback);
       imageCallbacks.remove(callback);
       statusCallbacks.remove(callback);
+      faceCallbacks.remove(callback);
     }
   }
 
@@ -201,7 +207,7 @@ public class GazeTrackerManager {
       }
       initializationCallbacks.clear();
       if (gazeTracker != null) {
-        gazeTracker.setCallbacks(gazeCallback, calibrationCallback, imageCallback, statusCallback, userStatusCallback);
+        gazeTracker.setCallbacks(gazeCallback, calibrationCallback, imageCallback, statusCallback, userStatusCallback, faceCallback);
         if (cameraPreview != null) {
           gazeTracker.setCameraPreview(cameraPreview.get());
         }
@@ -227,9 +233,9 @@ public class GazeTrackerManager {
     }
 
     @Override
-    public void onBlink(long timestamp, boolean isBlinkLeft, boolean isBlinkRight, boolean isBlink, float eyeOpenness) {
+    public void onBlink(long timestamp, boolean isBlinkLeft, boolean isBlinkRight, boolean isBlink, float leftOpenness, float rightOpenness) {
       for (UserStatusCallback userStatusCallback : userStatusCallbacks) {
-        userStatusCallback.onBlink(timestamp, isBlinkLeft, isBlinkRight, isBlink, eyeOpenness);
+        userStatusCallback.onBlink(timestamp, isBlinkLeft, isBlinkRight, isBlink, leftOpenness, rightOpenness);
       }
     }
 
@@ -237,6 +243,15 @@ public class GazeTrackerManager {
     public void onDrowsiness(long timestamp, boolean isDrowsiness) {
       for (UserStatusCallback userStatusCallback : userStatusCallbacks) {
         userStatusCallback.onDrowsiness(timestamp, isDrowsiness);
+      }
+    }
+  };
+
+  private FaceCallback faceCallback = new FaceCallback() {
+    @Override
+    public void onFace(FaceInfo faceInfo) {
+      for (FaceCallback faceCallback : faceCallbacks){
+        faceCallback.onFace(faceInfo);
       }
     }
   };

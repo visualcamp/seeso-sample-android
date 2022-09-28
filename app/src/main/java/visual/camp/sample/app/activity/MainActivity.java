@@ -27,6 +27,7 @@ import androidx.core.content.ContextCompat;
 
 import camp.visual.gazetracker.GazeTracker;
 import camp.visual.gazetracker.callback.CalibrationCallback;
+import camp.visual.gazetracker.callback.FaceCallback;
 import camp.visual.gazetracker.callback.GazeCallback;
 import camp.visual.gazetracker.callback.UserStatusCallback;
 import camp.visual.gazetracker.callback.InitializationCallback;
@@ -36,6 +37,7 @@ import camp.visual.gazetracker.constant.CalibrationModeType;
 import camp.visual.gazetracker.constant.InitializationErrorType;
 import camp.visual.gazetracker.constant.StatusErrorType;
 import camp.visual.gazetracker.constant.UserStatusOption;
+import camp.visual.gazetracker.face.FaceInfo;
 import camp.visual.gazetracker.filter.OneEuroFilterManager;
 import camp.visual.gazetracker.gaze.GazeInfo;
 import camp.visual.gazetracker.state.ScreenState;
@@ -45,6 +47,7 @@ import visual.camp.sample.app.GazeTrackerManager;
 import visual.camp.sample.app.GazeTrackerManager.LoadCalibrationResult;
 import visual.camp.sample.app.R;
 import visual.camp.sample.view.CalibrationViewer;
+import visual.camp.sample.view.FaceBoxView;
 import visual.camp.sample.view.PointView;
 import visual.camp.sample.view.EyeBlinkView;
 import visual.camp.sample.view.AttentionView;
@@ -81,7 +84,7 @@ public class MainActivity extends AppCompatActivity {
           gazeTrackerManager.setCameraPreview(preview);
         }
 
-        gazeTrackerManager.setGazeTrackerCallbacks(gazeCallback, calibrationCallback, statusCallback, userStatusCallback);
+        gazeTrackerManager.setGazeTrackerCallbacks(gazeCallback, calibrationCallback, statusCallback, userStatusCallback, faceCallback);
         Log.i(TAG, "onStart");
     }
 
@@ -201,6 +204,7 @@ public class MainActivity extends AppCompatActivity {
     private View layoutProgress;
     private View viewWarningTracking;
     private PointView viewPoint;
+    private FaceBoxView viewFaceBox;
     private Button btnInitGaze, btnReleaseGaze;
     private Button btnStartTracking, btnStopTracking;
     private Button btnStartCalibration, btnStopCalibration, btnSetCalibration;
@@ -260,6 +264,7 @@ public class MainActivity extends AppCompatActivity {
         btnGuiDemo.setOnClickListener(onClickListener);
 
         viewPoint = findViewById(R.id.view_point);
+        viewFaceBox = findViewById(R.id.view_face_box);
         viewCalibration = findViewById(R.id.view_calibration);
 
         swUseGazeFilter = findViewById(R.id.sw_use_gaze_filter);
@@ -402,6 +407,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void getOffset(int x, int y) {
                 viewPoint.setOffset(x, y);
+                viewFaceBox.setOffset(x, y);
                 viewCalibration.setOffset(x, y);
             }
         });
@@ -595,6 +601,18 @@ public class MainActivity extends AppCompatActivity {
       }
     };
 
+    private final FaceCallback faceCallback = new FaceCallback() {
+        @Override
+        public void onFace(final FaceInfo faceInfo) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    viewFaceBox.setPosition(faceInfo.left, faceInfo.top, faceInfo.right, faceInfo.bottom, faceInfo.frameSize.getWidth(), faceInfo.frameSize.getHeight());
+                }
+            });
+        }
+    };
+
     private final UserStatusCallback userStatusCallback = new UserStatusCallback() {
         @Override
         public void onAttention(long timestampBegin, long timestampEnd, float attentionScore) {
@@ -603,8 +621,8 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @Override
-        public void onBlink(long timestamp, boolean isBlinkLeft, boolean isBlinkRight, boolean isBlink, float eyeOpenness) {
-          Log.i(TAG, "check User Status Blink " +  "Left: " + isBlinkLeft + ", Right: " + isBlinkRight + ", Blink: " + isBlink + ", eyeOpenness: " + eyeOpenness);
+        public void onBlink(long timestamp, boolean isBlinkLeft, boolean isBlinkRight, boolean isBlink, float leftOpenness, float rightOpenness) {
+          Log.i(TAG, "check User Status Blink " +  "Left: " + isBlinkLeft + ", Right: " + isBlinkRight + ", Blink: " + isBlink + ", leftOpenness: " + leftOpenness + ", rightOpenness: " + rightOpenness);
           viewEyeBlink.setLeftEyeBlink(isBlinkLeft);
           viewEyeBlink.setRightEyeBlink(isBlinkRight);
           viewEyeBlink.setEyeBlink(isBlink);
