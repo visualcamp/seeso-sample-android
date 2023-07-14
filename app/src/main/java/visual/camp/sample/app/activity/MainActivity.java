@@ -1,10 +1,12 @@
 package visual.camp.sample.app.activity;
 
 import android.Manifest;
-import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.SurfaceTexture;
-import android.os.Build;
+import android.hardware.usb.UsbDevice;
+import android.media.Image;
+import android.media.ImageReader;
+import android.media.ImageReader.OnImageAvailableListener;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -19,7 +21,6 @@ import android.widget.RadioGroup;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatTextView;
 import androidx.appcompat.widget.SwitchCompat;
@@ -30,17 +31,22 @@ import camp.visual.gazetracker.callback.CalibrationCallback;
 import camp.visual.gazetracker.callback.GazeCallback;
 import camp.visual.gazetracker.callback.UserStatusCallback;
 import camp.visual.gazetracker.callback.InitializationCallback;
-import camp.visual.gazetracker.callback.StatusCallback;
 import camp.visual.gazetracker.constant.AccuracyCriteria;
 import camp.visual.gazetracker.constant.CalibrationModeType;
 import camp.visual.gazetracker.constant.InitializationErrorType;
-import camp.visual.gazetracker.constant.StatusErrorType;
 import camp.visual.gazetracker.constant.UserStatusOption;
+import camp.visual.gazetracker.device.CameraPosition;
 import camp.visual.gazetracker.filter.OneEuroFilterManager;
 import camp.visual.gazetracker.gaze.GazeInfo;
 import camp.visual.gazetracker.state.ScreenState;
 import camp.visual.gazetracker.state.TrackingState;
 import camp.visual.gazetracker.util.ViewLayoutChecker;
+import com.jiangdg.usb.USBMonitor;
+import com.jiangdg.usb.USBMonitor.UsbControlBlock;
+import com.jiangdg.uvc.IFrameCallback;
+import com.jiangdg.uvc.UVCCamera;
+import java.nio.ByteBuffer;
+import java.util.Objects;
 import visual.camp.sample.app.GazeTrackerManager;
 import visual.camp.sample.app.GazeTrackerManager.LoadCalibrationResult;
 import visual.camp.sample.app.R;
@@ -50,16 +56,29 @@ import visual.camp.sample.view.EyeBlinkView;
 import visual.camp.sample.view.AttentionView;
 import visual.camp.sample.view.DrowsinessView;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements USBMonitor.OnDeviceConnectListener {
     private static final String TAG = MainActivity.class.getSimpleName();
     private static final String[] PERMISSIONS = new String[]{
-            Manifest.permission.CAMERA // 시선 추적 input
+            Manifest.permission.CAMERA
     };
     private static final int REQ_PERMISSION = 1000;
     private GazeTrackerManager gazeTrackerManager;
-    private ViewLayoutChecker viewLayoutChecker = new ViewLayoutChecker();
-    private HandlerThread backgroundThread = new HandlerThread("background");
+    private final ViewLayoutChecker viewLayoutChecker = new ViewLayoutChecker();
+    private final HandlerThread backgroundThread = new HandlerThread("background");
     private Handler backgroundHandler;
+
+    private final float USB_CAMERA_ORIGIN_X = 0;
+    private final float USB_CAMERA_ORIGIN_Y = -8;
+
+    private final float IMAGE_WIDTH = 640;
+    private final float IMAGE_HEIGHT = 480;
+
+    private boolean isConnected = false;
+
+    private USBMonitor mUSBMonitor;
+    private UVCCamera mUVCCamera;
+
+    private boolean isStartPreview = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,7 +86,8 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         gazeTrackerManager = GazeTrackerManager.makeNewInstance(this);
         Log.i(TAG, "gazeTracker version: " + GazeTracker.getVersionName());
-
+        mUSBMonitor = new USBMonitor(this, this);
+        mUSBMonitor.register();
         initView();
         checkPermission();
         initHandler();
@@ -76,12 +96,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        if (preview.isAvailable()) {
-          // When if textureView available
-          gazeTrackerManager.setCameraPreview(preview);
-        }
-
-        gazeTrackerManager.setGazeTrackerCallbacks(gazeCallback, calibrationCallback, statusCallback, userStatusCallback);
         Log.i(TAG, "onStart");
     }
 
@@ -89,31 +103,40 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         Log.i(TAG, "onResume");
-        // 화면 전환후에도 체크하기 위해
         setOffsetOfView();
-        gazeTrackerManager.startGazeTracking();
+        if(gazeTrackerManager.hasGazeTracker()) {
+            mUVCCamera.startPreview();
+        }
+
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        gazeTrackerManager.stopGazeTracking();
+        if(gazeTrackerManager.hasGazeTracker()) {
+            mUVCCamera.stopPreview();
+        }
         Log.i(TAG, "onPause");
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        gazeTrackerManager.removeCameraPreview(preview);
-
-        gazeTrackerManager.removeCallbacks(gazeCallback, calibrationCallback, statusCallback, userStatusCallback);
+        gazeTrackerManager.removeCallbacks(gazeCallback, calibrationCallback, userStatusCallback);
         Log.i(TAG, "onStop");
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        if(mUVCCamera != null){
+            mUVCCamera.stopPreview();
+            mUVCCamera = null;
+        }
+
         releaseHandler();
+        mUSBMonitor.unregister();
+        mUSBMonitor.destroy();
         viewLayoutChecker.releaseChecker();
     }
 
@@ -132,23 +155,17 @@ public class MainActivity extends AppCompatActivity {
 
     // permission
     private void checkPermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            // Check permission status
-            if (!hasPermissions(PERMISSIONS)) {
-
-                requestPermissions(PERMISSIONS, REQ_PERMISSION);
-            } else {
-                checkPermission(true);
-            }
-        }else{
+        // Check permission status
+        if (!hasPermissions()) {
+            requestPermissions(PERMISSIONS, REQ_PERMISSION);
+        } else {
             checkPermission(true);
         }
     }
-    @RequiresApi(Build.VERSION_CODES.M)
-    private boolean hasPermissions(String[] permissions) {
+    private boolean hasPermissions() {
         int result;
         // Check permission status in string array
-        for (String perms : permissions) {
+        for (String perms : MainActivity.PERMISSIONS) {
             if (perms.equals(Manifest.permission.SYSTEM_ALERT_WINDOW)) {
                 if (!Settings.canDrawOverlays(this)) {
                     return false;
@@ -177,17 +194,12 @@ public class MainActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        switch (requestCode) {
-            case REQ_PERMISSION:
-                if (grantResults.length > 0) {
-                    boolean cameraPermissionAccepted = grantResults[0] == PackageManager.PERMISSION_GRANTED;
-                    if (cameraPermissionAccepted) {
-                        checkPermission(true);
-                    } else {
-                        checkPermission(false);
-                    }
-                }
-                break;
+        if (requestCode == REQ_PERMISSION) {
+            if (grantResults.length > 0) {
+                boolean cameraPermissionAccepted =
+                    grantResults[0] == PackageManager.PERMISSION_GRANTED;
+                checkPermission(cameraPermissionAccepted);
+            }
         }
     }
 
@@ -204,20 +216,18 @@ public class MainActivity extends AppCompatActivity {
     private Button btnInitGaze, btnReleaseGaze;
     private Button btnStartTracking, btnStopTracking;
     private Button btnStartCalibration, btnStopCalibration, btnSetCalibration;
-    private Button btnGuiDemo;
     private CalibrationViewer viewCalibration;
     private EyeBlinkView viewEyeBlink;
     private AttentionView viewAttention;
     private DrowsinessView viewDrowsiness;
 
-    // gaze coord filter
+    // gaze filter
     private SwitchCompat swUseGazeFilter;
     private SwitchCompat swStatusBlink, swStatusAttention, swStatusDrowsiness;
     private boolean isUseGazeFilter = true;
     private boolean isStatusBlink = false;
     private boolean isStatusAttention = false;
     private boolean isStatusDrowsiness = false;
-    private int activeStatusCount = 0;
 
     // calibration type
     private RadioGroup rgCalibration;
@@ -225,10 +235,9 @@ public class MainActivity extends AppCompatActivity {
     private CalibrationModeType calibrationType = CalibrationModeType.DEFAULT;
     private AccuracyCriteria criteria = AccuracyCriteria.DEFAULT;
 
-    private AppCompatTextView txtGazeVersion;
     private void initView() {
-        txtGazeVersion = findViewById(R.id.txt_gaze_version);
-        txtGazeVersion.setText("version: " + GazeTracker.getVersionName());
+        AppCompatTextView txtGazeVersion = findViewById(R.id.txt_gaze_version);
+        txtGazeVersion.setText(getString(R.string.version_name, GazeTracker.getVersionName()));
 
         layoutProgress = findViewById(R.id.layout_progress);
         layoutProgress.setOnClickListener(null);
@@ -255,9 +264,6 @@ public class MainActivity extends AppCompatActivity {
 
         btnSetCalibration = findViewById(R.id.btn_set_calibration);
         btnSetCalibration.setOnClickListener(onClickListener);
-
-        btnGuiDemo = findViewById(R.id.btn_gui_demo);
-        btnGuiDemo.setOnClickListener(onClickListener);
 
         viewPoint = findViewById(R.id.view_point);
         viewCalibration = findViewById(R.id.view_calibration);
@@ -312,7 +318,7 @@ public class MainActivity extends AppCompatActivity {
         setViewAtGazeTrackerState();
     }
 
-    private RadioGroup.OnCheckedChangeListener onCheckedChangeRadioButton = new RadioGroup.OnCheckedChangeListener() {
+    private final RadioGroup.OnCheckedChangeListener onCheckedChangeRadioButton = new RadioGroup.OnCheckedChangeListener() {
         @Override
         public void onCheckedChanged(RadioGroup group, int checkedId) {
             if (group == rgCalibration) {
@@ -335,7 +341,7 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
-    private SwitchCompat.OnCheckedChangeListener onCheckedChangeSwitch = new CompoundButton.OnCheckedChangeListener() {
+    private final SwitchCompat.OnCheckedChangeListener onCheckedChangeSwitch = new CompoundButton.OnCheckedChangeListener() {
         @Override
         public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
             if (buttonView == swUseGazeFilter) {
@@ -344,38 +350,31 @@ public class MainActivity extends AppCompatActivity {
                 isStatusBlink = isChecked;
                 if (isStatusBlink) {
                     viewEyeBlink.setVisibility(View.VISIBLE);
-                    activeStatusCount++;
                 } else {
                     viewEyeBlink.setVisibility(View.GONE);
-                    activeStatusCount--;
                 }
             } else if (buttonView == swStatusAttention) {
                 isStatusAttention = isChecked;
                 if (isStatusAttention) {
                     viewAttention.setVisibility(View.VISIBLE);
-                    activeStatusCount++;
                 } else {
                     viewAttention.setVisibility(View.GONE);
-                    activeStatusCount--;
                 }
             } else if (buttonView == swStatusDrowsiness) {
                 isStatusDrowsiness = isChecked;
                 if (isStatusDrowsiness) {
                     viewDrowsiness.setVisibility(View.VISIBLE);
-                    activeStatusCount++;
                 } else {
                     viewDrowsiness.setVisibility(View.GONE);
-                    activeStatusCount--;
                 }
             }
         }
     };
 
-    private TextureView.SurfaceTextureListener surfaceTextureListener = new TextureView.SurfaceTextureListener() {
+    private final TextureView.SurfaceTextureListener surfaceTextureListener = new TextureView.SurfaceTextureListener() {
         @Override
         public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
             // When if textureView available
-            gazeTrackerManager.setCameraPreview(preview);
         }
 
         @Override
@@ -392,6 +391,19 @@ public class MainActivity extends AppCompatActivity {
         public void onSurfaceTextureUpdated(SurfaceTexture surface) {
 
         }
+    };
+
+    private final ImageReader.OnImageAvailableListener imageAvailableListener = new OnImageAvailableListener() {
+        @Override
+        public void onImageAvailable(ImageReader reader) {
+            Image image = reader.acquireNextImage();
+            if(gazeTrackerManager.hasGazeTracker()) {
+                gazeTrackerManager.addFrame(image);
+            }
+            image.close();
+        }
+
+
     };
 
     // The gaze or calibration coordinates are delivered only to the absolute coordinates of the entire screen.
@@ -447,10 +459,10 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private View.OnClickListener onClickListener = new View.OnClickListener() {
+    private final View.OnClickListener onClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            if (v == btnInitGaze) {
+             if (v == btnInitGaze) {
                 initGaze();
             } else if (v == btnReleaseGaze) {
                 releaseGaze();
@@ -464,8 +476,6 @@ public class MainActivity extends AppCompatActivity {
                 stopCalibration();
             } else if (v == btnSetCalibration) {
                 setCalibration();
-            } else if (v == btnGuiDemo) {
-                showGuiDemo();
             }
         }
     };
@@ -524,13 +534,13 @@ public class MainActivity extends AppCompatActivity {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                btnInitGaze.setEnabled(!isTrackerValid());
-                btnReleaseGaze.setEnabled(isTrackerValid());
-                btnStartTracking.setEnabled(isTrackerValid() && !isTracking());
-                btnStopTracking.setEnabled(isTracking());
-                btnStartCalibration.setEnabled(isTracking());
-                btnStopCalibration.setEnabled(isTracking());
-                btnSetCalibration.setEnabled(isTrackerValid());
+                btnInitGaze.setEnabled(isConnected && !isTrackerValid());
+                btnReleaseGaze.setEnabled(isConnected && isTrackerValid());
+                btnStartTracking.setEnabled(isConnected && isTrackerValid() && !isTracking());
+                btnStopTracking.setEnabled(isConnected && isTracking());
+                btnStartCalibration.setEnabled(isConnected && isTracking());
+                btnStopCalibration.setEnabled(isConnected && isTracking());
+                btnSetCalibration.setEnabled(isConnected && isTrackerValid());
                 if (!isTracking()) {
                     hideCalibrationView();
                 }
@@ -563,27 +573,32 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private boolean isTracking() {
-      return gazeTrackerManager.isTracking();
+        // cameraManager isTracking
+      return isStartPreview;
     }
 
     private final InitializationCallback initializationCallback = new InitializationCallback() {
         @Override
         public void onInitialized(GazeTracker gazeTracker, InitializationErrorType error) {
             if (gazeTracker != null) {
-                initSuccess(gazeTracker);
+                initSuccess();
             } else {
                 initFail(error);
             }
         }
     };
 
-    private void initSuccess(GazeTracker gazeTracker) {
+    private void initSuccess() {
+        CameraPosition current = gazeTrackerManager.getCameraPosition();
+        gazeTrackerManager.setCameraPosition(new CameraPosition("USB-Camera", current.screenWidth, current.screenHeight, USB_CAMERA_ORIGIN_X, USB_CAMERA_ORIGIN_Y));
+        gazeTrackerManager.setGazeTrackerCallbacks(gazeCallback, calibrationCallback, userStatusCallback);
         setViewAtGazeTrackerState();
         hideProgress();
     }
 
     private void initFail(InitializationErrorType error) {
         hideProgress();
+        Log.e(TAG, "init failed  : " + error.toString());
     }
 
     private final OneEuroFilterManager oneEuroFilterManager = new OneEuroFilterManager(2);
@@ -603,15 +618,15 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @Override
-        public void onBlink(long timestamp, boolean isBlinkLeft, boolean isBlinkRight, boolean isBlink, float eyeOpenness) {
-          Log.i(TAG, "check User Status Blink " +  "Left: " + isBlinkLeft + ", Right: " + isBlinkRight + ", Blink: " + isBlink + ", eyeOpenness: " + eyeOpenness);
+        public void onBlink(long timestamp, boolean isBlinkLeft, boolean isBlinkRight, boolean isBlink, float leftOpenness, float rightOpenness) {
+          Log.i(TAG, "check User Status Blink " +  "Left: " + isBlinkLeft + ", Right: " + isBlinkRight + ", Blink: " + isBlink + ", eyeOpenness: " + leftOpenness +", " + rightOpenness);
           viewEyeBlink.setLeftEyeBlink(isBlinkLeft);
           viewEyeBlink.setRightEyeBlink(isBlinkRight);
           viewEyeBlink.setEyeBlink(isBlink);
         }
 
         @Override
-        public void onDrowsiness(long timestamp, boolean isDrowsiness) {
+        public void onDrowsiness(long timestamp, boolean isDrowsiness, float intensity) {
           Log.i(TAG, "check User Status Drowsiness " + isDrowsiness);
           viewDrowsiness.setDrowsiness(isDrowsiness);
         }
@@ -638,7 +653,7 @@ public class MainActivity extends AppCompatActivity {
       return new float[]{gazeInfo.x, gazeInfo.y};
     }
 
-    private CalibrationCallback calibrationCallback = new CalibrationCallback() {
+    private final CalibrationCallback calibrationCallback = new CalibrationCallback() {
         @Override
         public void onCalibrationProgress(float progress) {
             setCalibrationProgress(progress);
@@ -665,35 +680,6 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
-    private StatusCallback statusCallback = new StatusCallback() {
-        @Override
-        public void onStarted() {
-            // isTracking true
-            // When if camera stream starting
-            setViewAtGazeTrackerState();
-        }
-
-        @Override
-        public void onStopped(StatusErrorType error) {
-            // isTracking false
-            // When if camera stream stopping
-            setViewAtGazeTrackerState();
-
-            if (error != StatusErrorType.ERROR_NONE) {
-                switch (error) {
-                    case ERROR_CAMERA_START:
-                        // When if camera stream can't start
-                        showToast("ERROR_CAMERA_START ", false);
-                        break;
-                    case ERROR_CAMERA_INTERRUPT:
-                        // When if camera stream interrupted
-                        showToast("ERROR_CAMERA_INTERRUPT ", false);
-                        break;
-                }
-            }
-        }
-    };
-
     private void initGaze() {
         showProgress();
 
@@ -707,7 +693,7 @@ public class MainActivity extends AppCompatActivity {
         if (isStatusDrowsiness) {
           userStatusOption.useDrowsiness();
         }
-
+        userStatusOption.useExternalMode(640, 480, 50);
         Log.i(TAG, "init option attention " + isStatusAttention + ", blink " + isStatusBlink + ", drowsiness " + isStatusDrowsiness);
 
         gazeTrackerManager.initGazeTracker(initializationCallback, userStatusOption);
@@ -717,31 +703,38 @@ public class MainActivity extends AppCompatActivity {
     private void releaseGaze() {
       gazeTrackerManager.deinitGazeTracker();
       setStatusSwitchState(true);
+      stopTracking();
       setViewAtGazeTrackerState();
     }
 
     private void startTracking() {
-      gazeTrackerManager.startGazeTracking();
+        if(mUVCCamera != null){
+           mUVCCamera.startPreview();
+            isStartPreview = true;
+        }
+        setViewAtGazeTrackerState();
     }
 
     private void stopTracking() {
-      gazeTrackerManager.stopGazeTracking();
+        if(mUVCCamera != null){
+            mUVCCamera.stopPreview();
+            isStartPreview = false;
+        }
+        setViewAtGazeTrackerState();
     }
 
-    private boolean startCalibration() {
+    private void startCalibration() {
       boolean isSuccess = gazeTrackerManager.startCalibration(calibrationType, criteria);
       if (!isSuccess) {
         showToast("calibration start fail", false);
       }
       setViewAtGazeTrackerState();
-      return isSuccess;
     }
 
     // Collect the data samples used for calibration
-    private boolean startCollectSamples() {
-      boolean isSuccess = gazeTrackerManager.startCollectingCalibrationSamples();
+    private void startCollectSamples() {
+      gazeTrackerManager.startCollectingCalibrationSamples();
       setViewAtGazeTrackerState();
-      return isSuccess;
     }
 
     private void stopCalibration() {
@@ -768,9 +761,53 @@ public class MainActivity extends AppCompatActivity {
       }
       setViewAtGazeTrackerState();
     }
+    @Override
+    public void onAttach(UsbDevice device) {
+        if (mUSBMonitor != null) {
+            mUSBMonitor.requestPermission(device);
+        }
+    }
 
-    private void showGuiDemo() {
-      Intent intent = new Intent(getApplicationContext(), DemoActivity.class);
-      startActivity(intent);
+    @Override
+    public void onDetach(UsbDevice device) {
+        if (mUSBMonitor != null) {
+            if (mUVCCamera != null) {
+                mUVCCamera.close();
+                mUVCCamera = null;
+            }
+        }
+    }
+
+    @Override
+    public void onConnect(UsbDevice device, UsbControlBlock ctrlBlock, boolean createNew) {
+        if (device.getManufacturerName() == null || !Objects.requireNonNull(
+            device).getManufacturerName().equals("Unknown")) {
+            mUVCCamera = new UVCCamera();
+            mUVCCamera.open(ctrlBlock);
+            mUVCCamera.setPreviewSize(640,480);
+            mUVCCamera.setPreviewTexture(this.preview.getSurfaceTexture());
+            mUVCCamera.setFrameCallback(new IFrameCallback() {
+                @Override
+                public void onFrame(ByteBuffer frame) {
+                    gazeTrackerManager.addImageBuffer(frame, 640, 480);
+                }
+            }, UVCCamera.PIXEL_FORMAT_NV21);
+            isConnected = true;
+            setViewAtGazeTrackerState();
+        } else {
+            showToast("Failed Usb device connected", false);
+        }
+    }
+
+    @Override
+    public void onDisconnect(UsbDevice device, UsbControlBlock ctrlBlock) {
+        if (mUVCCamera != null) {
+            mUVCCamera.close();
+            mUVCCamera = null;
+        }
+    }
+    @Override
+    public void onCancel(UsbDevice device) {
+
     }
 }

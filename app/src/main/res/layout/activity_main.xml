@@ -63,11 +63,10 @@
                 android:visibility="visible">
 
                 <Button
-                    android:id="@+id/btn_init_gaze"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="init gaze" />
-
+                  android:id="@+id/btn_init_gaze"
+                  android:layout_width="match_parent"
+                  android:layout_height="wrap_content"
+                  android:text="init gaze" />
                 <Button
                     android:id="@+id/btn_release_gaze"
                     android:layout_width="match_parent"
@@ -104,11 +103,6 @@
                     android:layout_height="wrap_content"
                     android:text="set calibration" />
 
-                <Button
-                    android:id="@+id/btn_gui_demo"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="gaze path demo" />
             </LinearLayout>
         </ScrollView>
     </LinearLayout>

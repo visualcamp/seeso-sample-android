@@ -3,7 +3,6 @@ package visual.camp.sample.app.activity;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.PointF;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.ImageView;
@@ -16,8 +15,6 @@ import camp.visual.gazetracker.state.EyeMovementState;
 import camp.visual.gazetracker.util.ViewLayoutChecker;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
 import visual.camp.sample.app.GazeTrackerManager;
 import visual.camp.sample.app.R;
 import visual.camp.sample.view.GazePathView;
@@ -49,7 +46,7 @@ public class DemoActivity extends AppCompatActivity {
   @Override
   protected void onResume() {
     super.onResume();
-    gazeTrackerManager.startGazeTracking();
+    //gazeTrackerManager.startGazeTracking();
     setOffsetOfView();
     Log.i(TAG, "onResume");
   }
@@ -57,7 +54,7 @@ public class DemoActivity extends AppCompatActivity {
   @Override
   protected void onPause() {
     super.onPause();
-    gazeTrackerManager.stopGazeTracking();
+    //gazeTrackerManager.stopGazeTracking();
     Log.i(TAG, "onPause");
   }
 

@@ -1,38 +1,36 @@
 package visual.camp.sample.app;
 
 import android.content.Context;
-import android.view.TextureView;
+import android.media.Image;
+import android.util.Log;
 import camp.visual.gazetracker.GazeTracker;
 import camp.visual.gazetracker.callback.CalibrationCallback;
 import camp.visual.gazetracker.callback.GazeCallback;
 import camp.visual.gazetracker.callback.UserStatusCallback;
 import camp.visual.gazetracker.callback.GazeTrackerCallback;
-import camp.visual.gazetracker.callback.ImageCallback;
 import camp.visual.gazetracker.callback.InitializationCallback;
-import camp.visual.gazetracker.callback.StatusCallback;
 import camp.visual.gazetracker.constant.AccuracyCriteria;
 import camp.visual.gazetracker.constant.CalibrationModeType;
 import camp.visual.gazetracker.constant.InitializationErrorType;
-import camp.visual.gazetracker.constant.StatusErrorType;
 import camp.visual.gazetracker.constant.UserStatusOption;
+import camp.visual.gazetracker.device.CameraPosition;
 import camp.visual.gazetracker.gaze.GazeInfo;
 import java.lang.ref.WeakReference;
+import java.nio.ByteBuffer;
+import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.List;
 
 import visual.camp.sample.app.calibration.CalibrationDataStorage;
 
 public class GazeTrackerManager {
-  private List<InitializationCallback> initializationCallbacks = new ArrayList<>();
-  private List<GazeCallback> gazeCallbacks = new ArrayList<>();
-  private List<CalibrationCallback> calibrationCallbacks = new ArrayList<>();
-  private List<StatusCallback> statusCallbacks = new ArrayList<>();
-  private List<ImageCallback> imageCallbacks = new ArrayList<>();
-  private List<UserStatusCallback> userStatusCallbacks = new ArrayList<>();
+  private final List<InitializationCallback> initializationCallbacks = new ArrayList<>();
+  private final List<GazeCallback> gazeCallbacks = new ArrayList<>();
+  private final List<CalibrationCallback> calibrationCallbacks = new ArrayList<>();
+  private final List<UserStatusCallback> userStatusCallbacks = new ArrayList<>();
 
   static private GazeTrackerManager mInstance = null;
 
-  private WeakReference<TextureView> cameraPreview = null;
   private final WeakReference<Context> mContext;
 
   GazeTracker gazeTracker = null;
@@ -61,8 +59,13 @@ public class GazeTrackerManager {
 
   public void initGazeTracker(InitializationCallback callback, UserStatusOption option) {
     initializationCallbacks.add(callback);
-
     GazeTracker.initGazeTracker(mContext.get(), SEESO_LICENSE_KEY, initializationCallback, option);
+  }
+
+  public void setCameraPosition(CameraPosition cp){
+    if(gazeTracker != null) {
+      gazeTracker.addCameraPosition(cp);
+    }
   }
 
   public void deinitGazeTracker() {
@@ -72,49 +75,52 @@ public class GazeTrackerManager {
     }
   }
 
+  public void addFrame(Image image) {
+    if(gazeTracker != null) {
+      gazeTracker.addImage(image);
+    }
+  }
+
+  public void addImageBuffer(ByteBuffer buffer, int width, int height){
+    if(gazeTracker != null) {
+      gazeTracker.addImageBuffer(buffer, width, height);
+    }
+  }
+
   public void setGazeTrackerCallbacks(GazeTrackerCallback... callbacks) {
     for(GazeTrackerCallback callback : callbacks) {
       if (callback instanceof GazeCallback) {
-        gazeCallbacks.add((GazeCallback)callback);
+        if(!gazeCallbacks.contains(callback)) {
+          gazeCallbacks.add((GazeCallback)callback);
+        }
 
       } else if (callback instanceof CalibrationCallback) {
-        calibrationCallbacks.add((CalibrationCallback) callback);
-
-      } else if (callback instanceof ImageCallback) {
-        imageCallbacks.add((ImageCallback)callback);
-
-      } else if (callback instanceof StatusCallback) {
-        statusCallbacks.add((StatusCallback) callback);
+        if(!calibrationCallbacks.contains(callback)) {
+          calibrationCallbacks.add((CalibrationCallback) callback);
+        }
 
       } else if (callback instanceof UserStatusCallback) {
-        userStatusCallbacks.add((UserStatusCallback) callback);
+        if(!userStatusCallbacks.contains(callback)) {
+          userStatusCallbacks.add((UserStatusCallback) callback);
+        }
       }
     }
   }
 
   public void removeCallbacks(GazeTrackerCallback... callbacks) {
     for (GazeTrackerCallback callback : callbacks) {
-      gazeCallbacks.remove(callback);
-      calibrationCallbacks.remove(callback);
-      imageCallbacks.remove(callback);
-      statusCallbacks.remove(callback);
-    }
-  }
+      if (callback instanceof GazeCallback){
+        gazeCallbacks.remove(callback);
+      }
 
-  public boolean startGazeTracking() {
-    if (hasGazeTracker()) {
-      gazeTracker.startTracking();
-      return true;
-    }
-    return false;
-  }
+      if (callback instanceof CalibrationCallback) {
+        calibrationCallbacks.remove(callback);
+      }
 
-  public boolean stopGazeTracking() {
-    if (isTracking()) {
-      gazeTracker.stopTracking();
-      return true;
+      if (callback instanceof UserStatusCallback) {
+        userStatusCallbacks.remove(callback);
+      }
     }
-    return false;
   }
 
   public boolean startCalibration(CalibrationModeType modeType, AccuracyCriteria criteria) {
@@ -124,26 +130,16 @@ public class GazeTrackerManager {
     return false;
   }
 
-  public boolean stopCalibration() {
+  public void stopCalibration() {
     if (isCalibrating()) {
       gazeTracker.stopCalibration();
-      return true;
     }
-    return false;
   }
 
-  public boolean startCollectingCalibrationSamples() {
+  public void startCollectingCalibrationSamples() {
     if (isCalibrating()) {
-      return gazeTracker.startCollectSamples();
+      gazeTracker.startCollectSamples();
     }
-    return false;
-  }
-
-  public boolean isTracking() {
-    if (hasGazeTracker()) {
-      return gazeTracker.isTracking();
-    }
-    return false;
   }
 
   public boolean isCalibrating() {
@@ -151,6 +147,13 @@ public class GazeTrackerManager {
       return gazeTracker.isCalibrating();
     }
     return false;
+  }
+
+  public CameraPosition getCameraPosition() {
+    if (hasGazeTracker()) {
+      return  gazeTracker.getCameraPosition();
+    }
+    return null;
   }
 
   public enum LoadCalibrationResult {
@@ -175,22 +178,6 @@ public class GazeTrackerManager {
     }
   }
 
-  public void setCameraPreview(TextureView preview) {
-    this.cameraPreview = new WeakReference<>(preview);
-    if (hasGazeTracker()) {
-      gazeTracker.setCameraPreview(preview);
-    }
-  }
-
-  public void removeCameraPreview(TextureView preview) {
-    if (this.cameraPreview.get() == preview) {
-      this.cameraPreview = null;
-      if (hasGazeTracker()) {
-        gazeTracker.removeCameraPreview();
-      }
-    }
-  }
-
   // GazeTracker Callbacks
   private final InitializationCallback initializationCallback = new InitializationCallback() {
     @Override
@@ -201,10 +188,9 @@ public class GazeTrackerManager {
       }
       initializationCallbacks.clear();
       if (gazeTracker != null) {
-        gazeTracker.setCallbacks(gazeCallback, calibrationCallback, imageCallback, statusCallback, userStatusCallback);
-        if (cameraPreview != null) {
-          gazeTracker.setCameraPreview(cameraPreview.get());
-        }
+        gazeTracker.setGazeCallback(gazeCallback);
+        gazeTracker.setCalibrationCallback(calibrationCallback);
+        gazeTracker.setUserStatusCallback(userStatusCallback);
       }
     }
   };
@@ -212,13 +198,14 @@ public class GazeTrackerManager {
   private final GazeCallback gazeCallback = new GazeCallback() {
     @Override
     public void onGaze(GazeInfo gazeInfo) {
+      Log.d("GazeTrackerManager", "onGaze " + gazeInfo.trackingState.name());
       for (GazeCallback gazeCallback : gazeCallbacks) {
         gazeCallback.onGaze(gazeInfo);
       }
     }
   };
 
-  private UserStatusCallback userStatusCallback = new UserStatusCallback() {
+  private final UserStatusCallback userStatusCallback = new UserStatusCallback() {
     @Override
     public void onAttention(long timestampBegin, long timestampEnd, float attentionScore) {
       for (UserStatusCallback userStatusCallback : userStatusCallbacks) {
@@ -227,21 +214,21 @@ public class GazeTrackerManager {
     }
 
     @Override
-    public void onBlink(long timestamp, boolean isBlinkLeft, boolean isBlinkRight, boolean isBlink, float eyeOpenness) {
+    public void onBlink(long timestamp, boolean isBlinkLeft, boolean isBlinkRight, boolean isBlink, float leftOpenness, float rightOpenness) {
       for (UserStatusCallback userStatusCallback : userStatusCallbacks) {
-        userStatusCallback.onBlink(timestamp, isBlinkLeft, isBlinkRight, isBlink, eyeOpenness);
+        userStatusCallback.onBlink(timestamp, isBlinkLeft, isBlinkRight, isBlink, leftOpenness, rightOpenness);
       }
     }
 
     @Override
-    public void onDrowsiness(long timestamp, boolean isDrowsiness) {
+    public void onDrowsiness(long timestamp, boolean isDrowsiness, float intensity) {
       for (UserStatusCallback userStatusCallback : userStatusCallbacks) {
-        userStatusCallback.onDrowsiness(timestamp, isDrowsiness);
+        userStatusCallback.onDrowsiness(timestamp, isDrowsiness, intensity);
       }
     }
   };
 
-  private CalibrationCallback calibrationCallback = new CalibrationCallback() {
+  private final CalibrationCallback calibrationCallback = new CalibrationCallback() {
     @Override
     public void onCalibrationProgress(float v) {
       for (CalibrationCallback calibrationCallback : calibrationCallbacks) {
@@ -261,31 +248,6 @@ public class GazeTrackerManager {
       CalibrationDataStorage.saveCalibrationData(mContext.get(), doubles);
       for (CalibrationCallback calibrationCallback : calibrationCallbacks) {
         calibrationCallback.onCalibrationFinished(doubles);
-      }
-    }
-  };
-
-  private final ImageCallback imageCallback = new ImageCallback() {
-    @Override
-    public void onImage(long l, byte[] bytes) {
-      for (ImageCallback imageCallback : imageCallbacks) {
-        imageCallback.onImage(l, bytes);
-      }
-    }
-  };
-
-  private final StatusCallback statusCallback = new StatusCallback() {
-    @Override
-    public void onStarted() {
-      for (StatusCallback statusCallback : statusCallbacks) {
-        statusCallback.onStarted();
-      }
-    }
-
-    @Override
-    public void onStopped(StatusErrorType statusErrorType) {
-      for (StatusCallback statusCallback : statusCallbacks) {
-        statusCallback.onStopped(statusErrorType);
       }
     }
   };
