@@ -4,7 +4,7 @@
 <div align="center">
     <h1>SeeSo Android Sample</h1>
     <a href="https://github.com/visualcamp/seeso-sample-android/releases" alt="release">
-        <img src="https://img.shields.io/badge/version-3.0.0-blue" />
+        <img src="https://img.shields.io/badge/version-3.1.0-blue" />
     </a>
 </div>
 
