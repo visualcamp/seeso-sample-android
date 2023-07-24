@@ -603,16 +603,27 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @Override
-        public void onBlink(long timestamp, boolean isBlinkLeft, boolean isBlinkRight, boolean isBlink, float eyeOpenness) {
-          Log.i(TAG, "check User Status Blink " +  "Left: " + isBlinkLeft + ", Right: " + isBlinkRight + ", Blink: " + isBlink + ", eyeOpenness: " + eyeOpenness);
+        public void onBlink(long timestamp,
+            boolean isBlinkLeft,
+            boolean isBlinkRight,
+            boolean isBlink,
+            float leftOpenness,
+            float rightOpenness) {
+          Log.i(TAG, "check User Status Blink "
+              + "Left: " + isBlinkLeft
+              + ", Right: " + isBlinkRight
+              + ", Blink: " + isBlink
+              + ", leftOpenness: " + leftOpenness
+              + ", rightOpenness: " + rightOpenness
+          );
           viewEyeBlink.setLeftEyeBlink(isBlinkLeft);
           viewEyeBlink.setRightEyeBlink(isBlinkRight);
           viewEyeBlink.setEyeBlink(isBlink);
         }
 
         @Override
-        public void onDrowsiness(long timestamp, boolean isDrowsiness) {
-          Log.i(TAG, "check User Status Drowsiness " + isDrowsiness);
+        public void onDrowsiness(long timestamp, boolean isDrowsiness, float intensity) {
+          Log.i(TAG, "check User Status Drowsiness " + isDrowsiness + ", intensity : " + intensity);
           viewDrowsiness.setDrowsiness(isDrowsiness);
         }
     };
