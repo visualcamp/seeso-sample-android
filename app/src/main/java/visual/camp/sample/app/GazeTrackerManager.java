@@ -75,19 +75,25 @@ public class GazeTrackerManager {
   public void setGazeTrackerCallbacks(GazeTrackerCallback... callbacks) {
     for(GazeTrackerCallback callback : callbacks) {
       if (callback instanceof GazeCallback) {
-        gazeCallbacks.add((GazeCallback)callback);
-
+        if(!gazeCallbacks.contains(callback)) {
+          gazeCallbacks.add((GazeCallback)callback);
+        }
       } else if (callback instanceof CalibrationCallback) {
-        calibrationCallbacks.add((CalibrationCallback) callback);
-
+        if(!calibrationCallbacks.contains(callback)) {
+          calibrationCallbacks.add((CalibrationCallback) callback);
+        }
       } else if (callback instanceof ImageCallback) {
-        imageCallbacks.add((ImageCallback)callback);
-
+        if(!imageCallbacks.contains(callback)) {
+          imageCallbacks.add((ImageCallback)callback);
+        }
       } else if (callback instanceof StatusCallback) {
-        statusCallbacks.add((StatusCallback) callback);
-
+        if(!statusCallbacks.contains(callback)) {
+          statusCallbacks.add((StatusCallback) callback);
+        }
       } else if (callback instanceof UserStatusCallback) {
-        userStatusCallbacks.add((UserStatusCallback) callback);
+        if(!userStatusCallbacks.contains(callback)) {
+          userStatusCallbacks.add((UserStatusCallback) callback);
+        }
       }
     }
   }
@@ -227,16 +233,23 @@ public class GazeTrackerManager {
     }
 
     @Override
-    public void onBlink(long timestamp, boolean isBlinkLeft, boolean isBlinkRight, boolean isBlink, float eyeOpenness) {
+    public void onBlink(long timestamp,
+        boolean isBlinkLeft, boolean isBlinkRight, boolean isBlink,
+        float leftOpenness, float rightOpenness) {
       for (UserStatusCallback userStatusCallback : userStatusCallbacks) {
-        userStatusCallback.onBlink(timestamp, isBlinkLeft, isBlinkRight, isBlink, eyeOpenness);
+        userStatusCallback.onBlink(timestamp,
+            isBlinkLeft,
+            isBlinkRight,
+            isBlink,
+            leftOpenness,
+            rightOpenness);
       }
     }
 
     @Override
-    public void onDrowsiness(long timestamp, boolean isDrowsiness) {
+    public void onDrowsiness(long timestamp, boolean isDrowsiness, float intensity) {
       for (UserStatusCallback userStatusCallback : userStatusCallbacks) {
-        userStatusCallback.onDrowsiness(timestamp, isDrowsiness);
+        userStatusCallback.onDrowsiness(timestamp, isDrowsiness, intensity);
       }
     }
   };
