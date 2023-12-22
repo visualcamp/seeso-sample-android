@@ -1,4 +1,4 @@
 rootProject.name='SeeSoSample'
-include ':libgaze-release', ':gazetracker-release'
+//include ':libgaze-release', ':gazetracker-release'
 include ':app'
 include ':view'

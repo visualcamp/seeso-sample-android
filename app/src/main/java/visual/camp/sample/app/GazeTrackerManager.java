@@ -75,15 +75,9 @@ public class GazeTrackerManager {
     }
   }
 
-  public void addFrame(Image image) {
+  public void addImage(Image image) {
     if(gazeTracker != null) {
       gazeTracker.addImage(image);
-    }
-  }
-
-  public void addImageBuffer(ByteBuffer buffer, int width, int height){
-    if(gazeTracker != null) {
-      gazeTracker.addImageBuffer(buffer, width, height);
     }
   }
 

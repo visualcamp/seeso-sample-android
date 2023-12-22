@@ -1,18 +1,15 @@
 package visual.camp.sample.app.activity;
 
 import android.Manifest;
+import android.Manifest.permission;
 import android.content.pm.PackageManager;
-import android.graphics.SurfaceTexture;
-import android.hardware.usb.UsbDevice;
 import android.media.Image;
-import android.media.ImageReader;
-import android.media.ImageReader.OnImageAvailableListener;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.provider.Settings;
 import android.util.Log;
-import android.view.TextureView;
+import android.util.Size;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CompoundButton;
@@ -24,8 +21,17 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatTextView;
 import androidx.appcompat.widget.SwitchCompat;
+import androidx.camera.core.Camera;
+import androidx.camera.core.CameraSelector;
+import androidx.camera.core.ExperimentalGetImage;
+import androidx.camera.core.ImageAnalysis;
+import androidx.camera.core.Preview;
+import androidx.camera.core.Preview.Builder;
+import androidx.camera.lifecycle.ProcessCameraProvider;
+import androidx.camera.view.PreviewView;
 import androidx.core.content.ContextCompat;
 
+import androidx.lifecycle.LifecycleOwner;
 import camp.visual.gazetracker.GazeTracker;
 import camp.visual.gazetracker.callback.CalibrationCallback;
 import camp.visual.gazetracker.callback.GazeCallback;
@@ -41,12 +47,8 @@ import camp.visual.gazetracker.gaze.GazeInfo;
 import camp.visual.gazetracker.state.ScreenState;
 import camp.visual.gazetracker.state.TrackingState;
 import camp.visual.gazetracker.util.ViewLayoutChecker;
-import com.jiangdg.usb.USBMonitor;
-import com.jiangdg.usb.USBMonitor.UsbControlBlock;
-import com.jiangdg.uvc.IFrameCallback;
-import com.jiangdg.uvc.UVCCamera;
-import java.nio.ByteBuffer;
-import java.util.Objects;
+import com.google.common.util.concurrent.ListenableFuture;
+import java.util.concurrent.ExecutionException;
 import visual.camp.sample.app.GazeTrackerManager;
 import visual.camp.sample.app.GazeTrackerManager.LoadCalibrationResult;
 import visual.camp.sample.app.R;
@@ -55,8 +57,8 @@ import visual.camp.sample.view.PointView;
 import visual.camp.sample.view.EyeBlinkView;
 import visual.camp.sample.view.AttentionView;
 import visual.camp.sample.view.DrowsinessView;
-
-public class MainActivity extends AppCompatActivity implements USBMonitor.OnDeviceConnectListener {
+@ExperimentalGetImage
+public class MainActivity extends AppCompatActivity {
     private static final String TAG = MainActivity.class.getSimpleName();
     private static final String[] PERMISSIONS = new String[]{
             Manifest.permission.CAMERA
@@ -75,19 +77,14 @@ public class MainActivity extends AppCompatActivity implements USBMonitor.OnDevi
 
     private boolean isConnected = false;
 
-    private USBMonitor mUSBMonitor;
-    private UVCCamera mUVCCamera;
-
-    private boolean isStartPreview = false;
+    private boolean isStartTracking = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         gazeTrackerManager = GazeTrackerManager.makeNewInstance(this);
-        Log.i(TAG, "gazeTracker version: " + GazeTracker.getVersionName());
-        mUSBMonitor = new USBMonitor(this, this);
-        mUSBMonitor.register();
+        isConnected = true;
         initView();
         checkPermission();
         initHandler();
@@ -104,18 +101,12 @@ public class MainActivity extends AppCompatActivity implements USBMonitor.OnDevi
         super.onResume();
         Log.i(TAG, "onResume");
         setOffsetOfView();
-        if(gazeTrackerManager.hasGazeTracker()) {
-            mUVCCamera.startPreview();
-        }
 
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        if(gazeTrackerManager.hasGazeTracker()) {
-            mUVCCamera.stopPreview();
-        }
         Log.i(TAG, "onPause");
     }
 
@@ -129,14 +120,8 @@ public class MainActivity extends AppCompatActivity implements USBMonitor.OnDevi
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if(mUVCCamera != null){
-            mUVCCamera.stopPreview();
-            mUVCCamera = null;
-        }
 
         releaseHandler();
-        mUSBMonitor.unregister();
-        mUSBMonitor.destroy();
         viewLayoutChecker.releaseChecker();
     }
 
@@ -205,11 +190,55 @@ public class MainActivity extends AppCompatActivity implements USBMonitor.OnDevi
 
     private void permissionGranted() {
         setViewAtGazeTrackerState();
+
+        cameraProviderFuture = ProcessCameraProvider.getInstance(this);
+
+        cameraProviderFuture.addListener(() -> {
+            try {
+                ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
+                bindCameraPreview(cameraProvider);
+            } catch (ExecutionException | InterruptedException e) {
+                // Handle exceptions
+            }
+        }, ContextCompat.getMainExecutor(this));
+    }
+
+    private void bindCameraPreview(@NonNull ProcessCameraProvider cameraProvider) {
+        Preview previewBuilder = new Builder()
+            .build();
+
+        CameraSelector cameraSelector = new CameraSelector.Builder()
+            .requireLensFacing(CameraSelector.LENS_FACING_FRONT)
+            .build();
+
+        previewBuilder.setSurfaceProvider(preview.getSurfaceProvider());
+
+        ImageAnalysis imageAnalysis =
+            new ImageAnalysis.Builder()
+                .setTargetResolution(new Size(720, 1280)) // Set resolution
+                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                .build();
+
+        imageAnalysis.setAnalyzer(ContextCompat.getMainExecutor(this), imageProxy -> {
+            if (isStartTracking) {
+                Image image = imageProxy.getImage();
+                if (image != null) {
+                    // 여기서 Image 객체를 사용하여 필요한 작업을 수행합니다.
+                    gazeTrackerManager.addImage(image);
+                }
+                // 처리가 완료된 후에는 반드시 close를 호출합니다.
+                image.close();
+            }
+            imageProxy.close(); // ImageProxy 객체도 닫아야 합니다.
+        });
+
+        Camera camera = cameraProvider.bindToLifecycle((LifecycleOwner) this, cameraSelector, previewBuilder, imageAnalysis);
     }
     // permission end
 
     // view
-    private TextureView preview;
+    private PreviewView preview;
+    private ListenableFuture<ProcessCameraProvider> cameraProviderFuture;
     private View layoutProgress;
     private View viewWarningTracking;
     private PointView viewPoint;
@@ -245,7 +274,6 @@ public class MainActivity extends AppCompatActivity implements USBMonitor.OnDevi
         viewWarningTracking = findViewById(R.id.view_warning_tracking);
 
         preview = findViewById(R.id.preview);
-        preview.setSurfaceTextureListener(surfaceTextureListener);
 
         btnInitGaze = findViewById(R.id.btn_init_gaze);
         btnReleaseGaze = findViewById(R.id.btn_release_gaze);
@@ -369,41 +397,6 @@ public class MainActivity extends AppCompatActivity implements USBMonitor.OnDevi
                 }
             }
         }
-    };
-
-    private final TextureView.SurfaceTextureListener surfaceTextureListener = new TextureView.SurfaceTextureListener() {
-        @Override
-        public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
-            // When if textureView available
-        }
-
-        @Override
-        public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
-
-        }
-
-        @Override
-        public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
-            return false;
-        }
-
-        @Override
-        public void onSurfaceTextureUpdated(SurfaceTexture surface) {
-
-        }
-    };
-
-    private final ImageReader.OnImageAvailableListener imageAvailableListener = new OnImageAvailableListener() {
-        @Override
-        public void onImageAvailable(ImageReader reader) {
-            Image image = reader.acquireNextImage();
-            if(gazeTrackerManager.hasGazeTracker()) {
-                gazeTrackerManager.addFrame(image);
-            }
-            image.close();
-        }
-
-
     };
 
     // The gaze or calibration coordinates are delivered only to the absolute coordinates of the entire screen.
@@ -574,7 +567,7 @@ public class MainActivity extends AppCompatActivity implements USBMonitor.OnDevi
 
     private boolean isTracking() {
         // cameraManager isTracking
-      return isStartPreview;
+      return isStartTracking;
     }
 
     private final InitializationCallback initializationCallback = new InitializationCallback() {
@@ -590,7 +583,7 @@ public class MainActivity extends AppCompatActivity implements USBMonitor.OnDevi
 
     private void initSuccess() {
         CameraPosition current = gazeTrackerManager.getCameraPosition();
-        gazeTrackerManager.setCameraPosition(new CameraPosition("USB-Camera", current.screenWidth, current.screenHeight, USB_CAMERA_ORIGIN_X, USB_CAMERA_ORIGIN_Y));
+        //gazeTrackerManager.setCameraPosition(new CameraPosition("USB-Camera", current.screenWidth, current.screenHeight, USB_CAMERA_ORIGIN_X, USB_CAMERA_ORIGIN_Y));
         gazeTrackerManager.setGazeTrackerCallbacks(gazeCallback, calibrationCallback, userStatusCallback);
         setViewAtGazeTrackerState();
         hideProgress();
@@ -693,7 +686,7 @@ public class MainActivity extends AppCompatActivity implements USBMonitor.OnDevi
         if (isStatusDrowsiness) {
           userStatusOption.useDrowsiness();
         }
-        userStatusOption.useExternalMode(640, 480, 50);
+        userStatusOption.useExternalMode(this);
         Log.i(TAG, "init option attention " + isStatusAttention + ", blink " + isStatusBlink + ", drowsiness " + isStatusDrowsiness);
 
         gazeTrackerManager.initGazeTracker(initializationCallback, userStatusOption);
@@ -708,18 +701,12 @@ public class MainActivity extends AppCompatActivity implements USBMonitor.OnDevi
     }
 
     private void startTracking() {
-        if(mUVCCamera != null){
-           mUVCCamera.startPreview();
-            isStartPreview = true;
-        }
+        isStartTracking = true;
         setViewAtGazeTrackerState();
     }
 
     private void stopTracking() {
-        if(mUVCCamera != null){
-            mUVCCamera.stopPreview();
-            isStartPreview = false;
-        }
+        isStartTracking = false;
         setViewAtGazeTrackerState();
     }
 
@@ -760,54 +747,5 @@ public class MainActivity extends AppCompatActivity implements USBMonitor.OnDevi
           break;
       }
       setViewAtGazeTrackerState();
-    }
-    @Override
-    public void onAttach(UsbDevice device) {
-        if (mUSBMonitor != null) {
-            mUSBMonitor.requestPermission(device);
-        }
-    }
-
-    @Override
-    public void onDetach(UsbDevice device) {
-        if (mUSBMonitor != null) {
-            if (mUVCCamera != null) {
-                mUVCCamera.close();
-                mUVCCamera = null;
-            }
-        }
-    }
-
-    @Override
-    public void onConnect(UsbDevice device, UsbControlBlock ctrlBlock, boolean createNew) {
-        if (device.getManufacturerName() == null || !Objects.requireNonNull(
-            device).getManufacturerName().equals("Unknown")) {
-            mUVCCamera = new UVCCamera();
-            mUVCCamera.open(ctrlBlock);
-            mUVCCamera.setPreviewSize(640,480);
-            mUVCCamera.setPreviewTexture(this.preview.getSurfaceTexture());
-            mUVCCamera.setFrameCallback(new IFrameCallback() {
-                @Override
-                public void onFrame(ByteBuffer frame) {
-                    gazeTrackerManager.addImageBuffer(frame, 640, 480);
-                }
-            }, UVCCamera.PIXEL_FORMAT_NV21);
-            isConnected = true;
-            setViewAtGazeTrackerState();
-        } else {
-            showToast("Failed Usb device connected", false);
-        }
-    }
-
-    @Override
-    public void onDisconnect(UsbDevice device, UsbControlBlock ctrlBlock) {
-        if (mUVCCamera != null) {
-            mUVCCamera.close();
-            mUVCCamera = null;
-        }
-    }
-    @Override
-    public void onCancel(UsbDevice device) {
-
     }
 }
